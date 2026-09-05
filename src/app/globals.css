@@ -1,26 +1,127 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ---------------------------------------------------------------------------
+   Design tokens — mirrored from the PinLink Figma file (yBLU5kTeT7WHKFRLVbd7Ov).
+   Names match the Figma variable names so the two stay traceable.
+   --------------------------------------------------------------------------- */
+@theme {
+  /* Dark/* collection */
+  --color-bg-primary: #121212;
+  --color-bg-secondary: #20211e;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #999999;
+  --color-brand-primary: #c1ff72;
+
+  /* Hairline rules across the page are the border token at 20% */
+  --color-rule: rgba(255, 255, 255, 0.2);
+  /* Body copy inside cards/accordions sits at 70% rather than the grey token */
+  --color-text-muted: rgba(255, 255, 255, 0.7);
+
+  /* Spacer scale */
+  --spacing-xs: 4px;
+  --spacing-s: 8px;
+  --spacing-l: 32px;
+  --spacing-xl: 64px;
+  --spacing-xxl: 128px;
+
+  --font-sans: var(--font-chivo), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-chivo-mono), ui-monospace, monospace;
+  --font-mono-alt: var(--font-roboto-mono), ui-monospace, monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Light mode. Figma gives us Light/text-primary and Light/border; the surface
+   values still need confirming against the Desktop / light mode frame (4373:929). */
+:root[data-theme="light"] {
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f2f2f0;
+  --color-text-primary: #121212;
+  --color-text-secondary: #666666;
+  --color-rule: rgba(18, 18, 18, 0.2);
+  --color-text-muted: rgba(18, 18, 18, 0.7);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------------------
+   Type ramp — one class per Figma text style.
+   --------------------------------------------------------------------------- */
+@layer components {
+  /* Eyebrow: Chivo Mono 12 / 100% / 0 */
+  .type-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  /* Section label: Roboto Mono 14 / 1.4 / -2% */
+  .type-label {
+    font-family: var(--font-mono-alt);
+    font-size: 14px;
+    line-height: 1.4;
+    letter-spacing: -0.28px;
+    text-transform: uppercase;
+  }
+
+  /* H1 (hero): Chivo Medium 48 / 51px / -2% */
+  .type-h1 {
+    font-size: 48px;
+    font-weight: 500;
+    line-height: 51px;
+    letter-spacing: -0.96px;
+  }
+
+  /* H2: Chivo Medium 36 / 100% / -3% */
+  .type-h2 {
+    font-size: 36px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -1.08px;
+  }
+
+  /* H3: Chivo Medium 24 / 1.2 / -2% */
+  .type-h3 {
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.48px;
+  }
+
+  /* H5/H6: Chivo SemiBold 16 / 100% / -2% */
+  .type-h5 {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.32px;
+  }
+
+  /* Body large: Chivo 20 / 1.2 / -2% */
+  .type-body-lg {
+    font-size: 20px;
+    line-height: 1.2;
+    letter-spacing: -0.4px;
+  }
+
+  /* Body regular: Chivo 16 / 1.5 / -4% */
+  .type-body {
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: -0.64px;
+  }
+
+  /* Body small: Chivo 12 / 1.4 / -2% */
+  .type-body-sm {
+    font-size: 12px;
+    line-height: 1.4;
+    letter-spacing: -0.24px;
+  }
 }
