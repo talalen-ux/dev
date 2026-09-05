@@ -30,12 +30,15 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" data-theme="dark">
-      <body
-        className={`${chivo.variable} ${chivoMono.variable} ${robotoMono.variable}`}
-      >
-        {children}
-      </body>
+    // The font variables must live on <html>: globals.css derives --font-sans
+    // from --font-chivo in an @theme block that lands on :root, and that
+    // substitution fails if the variable is only defined further down the tree.
+    <html
+      lang="en"
+      data-theme="dark"
+      className={`${chivo.variable} ${chivoMono.variable} ${robotoMono.variable}`}
+    >
+      <body>{children}</body>
     </html>
   );
 }
