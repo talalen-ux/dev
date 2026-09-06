@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 
 /**
- * Figma 4361:477 — a 40x22 pill with a 16px knob. The design ships both a dark
- * and a light frame; the knob sits right in dark mode.
+ * Figma 4361:477 — a 40x22 pill with a 16px knob. The page now opens on the
+ * pastel-orange ground, so the toggle rests left and switches to the original
+ * near-black palette.
  */
 export function ThemeToggle() {
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
     document.documentElement.dataset.theme = isDark ? "dark" : "light";

@@ -22,16 +22,23 @@ Two constraints stopped the remaining assets from being exported:
 | `public/assets/pinlink-lockup.svg` | `4454:525` | Full logo lockup, 151×36 |
 | `public/assets/pinlink-mark.svg`, `icons/mark.svg` | `4454:527` | Brand mark split out of the lockup, 36×36 |
 
+Both are also inlined as `src/components/ui/Logo.tsx`, which is what the page
+renders. The exported files hardcode a white wordmark and a lime mark; the
+component takes `currentColor` and `--color-brand-primary` instead so the logo
+follows the theme. Keep the files as the source of truth for the path data.
+
 ## Reproduced exactly (not exported, but not a guess)
 
-| File | Node | Notes |
-| --- | --- | --- |
-| `icons/tokenomics-dot.svg` | `4373:315` | Plain 16×16 ellipse filled `#C1FF72` |
+`4373:315` is a plain 16×16 ellipse filled with the brand colour. It is now a
+CSS circle in `Tokenomics.tsx` rather than an asset, so it picks up the brand
+token in both themes.
 
 ## Provisional — must be replaced
 
 Each has the designed outer box so layout geometry is already correct; only the
 artwork inside is a stand-in (dashed outline, marked `PROVISIONAL` in the file).
+They stroke a neutral grey rather than a theme colour so they stay visible on
+both the pastel-orange and the near-black ground.
 
 | File | Node | Size |
 | --- | --- | --- |
@@ -89,4 +96,14 @@ but the layout is inferred and should be checked against the file:
 
 Two frames on the page are hidden (`visible: false`) and were deliberately
 skipped: `6968:74` (an alternate "Introducing" ticker) and `4361:497` (an older
-Team section without the `[X]` links; `4371:55` is the rendered one).
+Team section without the `[X]` links).
+
+## Divergence from the Figma file
+
+The page has since been taken away from the Figma design on purpose:
+
+- The palette is a pastel-orange rebrand (`#FFDCC2` ground, `#121212` ink,
+  `#4F6B22` accent). The original `Dark/*` palette is still there behind the
+  header toggle, as `:root[data-theme="dark"]`.
+- The Team section (`4371:55`) has been removed.
+- The token symbol is `$KRV`, not `$PIN`.

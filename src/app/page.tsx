@@ -9,7 +9,6 @@ import { HowItWorks } from "@/components/sections/HowItWorks";
 import { Roadmap } from "@/components/sections/Roadmap";
 import { SiteFooter } from "@/components/sections/SiteFooter";
 import { SiteHeader } from "@/components/sections/SiteHeader";
-import { Team } from "@/components/sections/Team";
 import { TokenTicker } from "@/components/sections/TokenTicker";
 import { Tokenomics } from "@/components/sections/Tokenomics";
 import { ValueProps } from "@/components/sections/ValueProps";
@@ -27,7 +26,6 @@ export default function Home() {
       <Features />
       <Benefits />
       <Roadmap />
-      <Team />
       <Tokenomics />
       <Faqs />
       <DocsCta />

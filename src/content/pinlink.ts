@@ -9,7 +9,6 @@ export const NAV_LINKS = [
   { label: "Features", href: "#features" },
   { label: "Benefits", href: "#benefits" },
   { label: "Roadmap", href: "#roadmap" },
-  { label: "Team", href: "#team" },
   { label: "Tokenomics", href: "#tokenomics" },
   { label: "FAQs", href: "#faqs" },
   { label: "DoC", href: "#docs" },
@@ -99,39 +98,6 @@ export const ROADMAP = [
   },
 ] as const;
 
-export const TEAM = [
-  {
-    name: "Lukasz Orlowski",
-    role: "Chief Executive Officer",
-    bio: "As former VP of Engineering at Enjin, Lukasz has experience leading technical strategy and execution for a $1B+ blockchain venture. He began his career developing enterprise storage and cloud solutions at Intel’s Data Center division and was recognized as an MIT Technology Review Innovator Under 35. Lukasz brings deep expertise in distributed systems, HPC, blockchain, and cloud technologies.",
-  },
-  {
-    name: "Talal AlAmeen",
-    role: "Chief Operating Officer",
-    bio: "With a track record of operational excellence, Tom previously led operations and marketing for Bahrain's fastest growing retail outlets. His deep expertise in mining operations and European and Asian markets, where he played a key role in scaling hardware deployment and optimizing revenue models. As COO of PinLink, Tom drives strategy, growth, and operational efficiency, bridging the worlds of DePIN, RWA tokenization, and decentralized infrastructure.",
-  },
-  {
-    name: "Adam Conover",
-    role: "Chief Commercial Officer",
-    bio: "An innovative, results-driven professional with 7+ years of experience in marketing and business development across the travel, entertainment, and technology sectors. Now leading business development growth at Pinlink, I bring versatile expertise in marketing and sales, with a proven record of success in conceptualizing cross-channel strategies and delivering exceptional client management that fosters long-lasting partnerships.",
-  },
-  {
-    name: "Jordan O'Neill",
-    role: "Chief Marketing Officer",
-    bio: "Over five years of Web3 marketing experience, scaled a digital marketing agency to $7m ARR by overseeing strategic growth. Managed multi-million-dollar raises across AI, gaming, music, and RWA projects, while executing fundraising, tokenization, and community management initiatives. Secured high-profile artist collaborations, sponsorships (MetLife, Meadowlands), and brand exposure through ESPN, Disney, MTV, and more.",
-  },
-  {
-    name: "Fasih Hader",
-    role: "Lead Blockchain Engineer",
-    bio: "Senior Blockchain Developer with 6+ years of experience specializing in Solidity, smart contract development, and decentralized applications (DApps). Expertise in high-level DeFi projects including DEXs, lending protocols, and yield farming. Proficient in EVM-based blockchains, Layer 2 solutions, cross-chain bridging, secure tokenomics, and optimizing blockchain performance.",
-  },
-  {
-    name: "Greg Ivanov",
-    role: "Advisor",
-    bio: "Greg is a General Partner at 22/7. He previously spent 12 years at Google in various product strategy and business development roles focussing on enabling and growing developer ecosystems (Google Play, AR, VR, Android TV and Android Auto).",
-  },
-] as const;
-
 type TokenomicsRow = {
   label: string;
   value: string;
@@ -140,7 +106,7 @@ type TokenomicsRow = {
 };
 
 export const TOKENOMICS_ROWS: readonly TokenomicsRow[] = [
-  { label: "Ticker", value: "$pin [purchase]", accent: true },
+  { label: "Ticker", value: "$krv [purchase]", accent: true },
   { label: "Supply", value: "100,000,000" },
   { label: "Network", value: "Ethereum" },
   { label: "Token Standard", value: "ERC-20*" },
@@ -176,7 +142,7 @@ export const FAQS = [
     question: "What types of DePIN assets does PinLink support?",
     answer: null,
   },
-  { question: "What is the utility of the $PIN token?", answer: null },
+  { question: "What is the utility of the $KRV token?", answer: null },
 ] as const;
 
 export const DOCS_BLURB =

@@ -1,4 +1,3 @@
-import { Icon } from "@/components/ui/Icon";
 import { TOKENOMICS_LINKS, TOKENOMICS_ROWS } from "@/content/pinlink";
 
 /** Figma 4373:313 — opens with a 4px accent rule; label / keys / values / links. */
@@ -9,7 +8,7 @@ export function Tokenomics() {
       className="flex flex-col gap-12 border-t-4 border-brand-primary py-xxl lg:flex-row"
     >
       <div className="flex flex-1 items-center gap-6">
-        <Icon name="tokenomics-dot" size={16} className="size-4" />
+        <span aria-hidden className="size-4 shrink-0 rounded-full bg-brand-primary" />
         <span className="type-eyebrow text-text-primary">Tokenomics</span>
       </div>
 
