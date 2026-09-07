@@ -1,15 +1,18 @@
-import { Icon } from "@/components/ui/Icon";
-import { VALUE_PROPS } from "@/content/pinlink";
+import { PillarIcon } from "@/components/ui/PillarIcon";
+import { PILLARS } from "@/content/resident";
 
-/** Figma 4361:86 — three eyebrow + statement columns. */
-export function ValueProps() {
+/** The three commitments the rest of the page substantiates. */
+export function Pillars() {
   return (
     <section className="border-t border-rule py-xxl">
       <div className="flex flex-col gap-12 lg:flex-row">
-        {VALUE_PROPS.map((item) => (
+        {PILLARS.map((item) => (
           <div key={item.eyebrow} className="flex flex-1 flex-col gap-l">
             <div className="flex items-center gap-s">
-              <Icon name={item.icon} size={16} className="size-4" />
+              <PillarIcon
+                name={item.icon}
+                className="size-4 text-brand-primary"
+              />
               <span className="type-eyebrow text-brand-primary">
                 {item.eyebrow}
               </span>

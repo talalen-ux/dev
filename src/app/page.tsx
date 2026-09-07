@@ -1,32 +1,36 @@
 import { Container } from "@/components/layout/Container";
 import { AnchorNav } from "@/components/sections/AnchorNav";
-import { Benefits } from "@/components/sections/Benefits";
+import { ChainStrip } from "@/components/sections/ChainStrip";
+import { Custody } from "@/components/sections/Custody";
+import { Cycle } from "@/components/sections/Cycle";
 import { DocsCta } from "@/components/sections/DocsCta";
 import { Faqs } from "@/components/sections/Faqs";
-import { Features } from "@/components/sections/Features";
 import { Hero } from "@/components/sections/Hero";
-import { HowItWorks } from "@/components/sections/HowItWorks";
-import { Roadmap } from "@/components/sections/Roadmap";
+import { LpDesk } from "@/components/sections/LpDesk";
+import { Method } from "@/components/sections/Method";
+import { Parameters } from "@/components/sections/Parameters";
+import { Payouts } from "@/components/sections/Payouts";
+import { Pillars } from "@/components/sections/Pillars";
+import { Signals } from "@/components/sections/Signals";
 import { SiteFooter } from "@/components/sections/SiteFooter";
 import { SiteHeader } from "@/components/sections/SiteHeader";
-import { TokenTicker } from "@/components/sections/TokenTicker";
-import { Tokenomics } from "@/components/sections/Tokenomics";
-import { ValueProps } from "@/components/sections/ValueProps";
 import { Wordmark } from "@/components/sections/Wordmark";
 
 export default function Home() {
   return (
     <Container>
       <SiteHeader />
-      <TokenTicker />
+      <ChainStrip />
       <Hero />
       <AnchorNav />
-      <ValueProps />
-      <HowItWorks />
-      <Features />
-      <Benefits />
-      <Roadmap />
-      <Tokenomics />
+      <Pillars />
+      <Cycle />
+      <Method />
+      <LpDesk />
+      <Signals />
+      <Payouts />
+      <Custody />
+      <Parameters />
       <Faqs />
       <DocsCta />
       <Wordmark />

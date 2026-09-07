@@ -21,9 +21,9 @@ const robotoMono = Roboto_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PinLink — Your Gateway to Tokenized Compute Power",
+  title: "Resident — The resident market maker for tokenized equities",
   description:
-    "The First RWA-Tokenized DePIN marketplace driving down costs for AI Developers and creating new revenue for asset owners.",
+    "Systematic liquidity provision against reference-price dislocations in tokenized equities. An autonomous market-making desk on Robinhood Chain paying 75% of realized profit to holders every 15 minutes.",
 };
 
 export default function RootLayout({

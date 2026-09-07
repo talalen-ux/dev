@@ -1,18 +1,17 @@
-import { Icon } from "@/components/ui/Icon";
-import { NAV_LINKS } from "@/content/pinlink";
+import { NAV_LINKS } from "@/content/resident";
 
-/** Figma 4361:76 — in-page anchors; the first is the active state. */
+/** In-page anchors, in the order the method is argued. */
 export function AnchorNav() {
   return (
     <nav className="flex items-center gap-6 overflow-x-auto border-t border-rule py-5">
-      <Icon name="nav-arrow" size={20} className="size-5" />
-      {NAV_LINKS.map((link, i) => (
+      <span aria-hidden className="type-label text-brand-primary">
+        ./
+      </span>
+      {NAV_LINKS.map((link) => (
         <a
           key={link.href}
           href={link.href}
-          className={`type-eyebrow whitespace-nowrap transition-colors hover:text-text-primary ${
-            i === 0 ? "text-text-primary" : "text-text-secondary"
-          }`}
+          className="type-eyebrow whitespace-nowrap text-text-secondary transition-colors hover:text-text-primary"
         >
           {link.label}
         </a>

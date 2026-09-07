@@ -1,12 +1,13 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   Design tokens — mirrored from the PinLink Figma file (yBLU5kTeT7WHKFRLVbd7Ov).
-   Names match the Figma variable names so the two stay traceable.
+   Design tokens for Resident. The scale and type ramp began as the PinLink
+   Figma system (yBLU5kTeT7WHKFRLVbd7Ov) and kept its structure; the palette is
+   Resident's own.
    --------------------------------------------------------------------------- */
 @theme {
   /* Surface + ink. The pastel-orange ground is the default view; the near-black
-     PinLink palette moves behind the header toggle (see [data-theme="dark"]). */
+     palette sits behind the header toggle (see [data-theme="dark"]). */
   --color-bg-primary: #ffdcc2;
   --color-bg-secondary: #f5ceb0;
   --color-text-primary: #121212;
@@ -30,7 +31,7 @@
   --font-mono-alt: var(--font-roboto-mono), ui-monospace, monospace;
 }
 
-/* The original Dark/* collection from Figma, now the alternate theme. */
+/* The alternate near-black theme, reached from the header toggle. */
 :root[data-theme="dark"] {
   --color-bg-primary: #121212;
   --color-bg-secondary: #20211e;

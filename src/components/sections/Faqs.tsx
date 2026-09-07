@@ -2,20 +2,19 @@
 
 import { useState } from "react";
 
-import { SectionLabel } from "@/components/layout/SectionLabel";
-import { FAQS } from "@/content/pinlink";
+import { FAQS } from "@/content/resident";
 
-/**
- * Figma 4361:168 — accordion list. The design shows item 3 open with the plus
- * glyph rotated 45deg into a close icon, so that is the default open row.
- */
+/** Every question here is answered by the method above. */
 export function Faqs() {
-  const [open, setOpen] = useState<number | null>(2);
+  const [open, setOpen] = useState<number | null>(0);
 
   return (
     <section id="faqs" className="border-t border-rule pt-xl pb-xxl">
       <div className="flex flex-col gap-12 lg:flex-row">
-        <SectionLabel label="FAQs" className="lg:w-[600px]" />
+        <div className="flex shrink-0 items-start gap-6 lg:w-[600px]">
+          <span className="type-label text-brand-primary">#</span>
+          <h2 className="type-eyebrow text-text-primary">FAQs</h2>
+        </div>
         <div className="flex flex-1 flex-col">
           {FAQS.map((faq, i) => {
             const isOpen = open === i;
@@ -45,8 +44,10 @@ export function Faqs() {
                     <span className="absolute top-0 left-1/2 h-full w-px -translate-x-1/2 bg-current" />
                   </span>
                 </button>
-                {isOpen && faq.answer ? (
-                  <p className="type-body mt-6 text-text-muted">{faq.answer}</p>
+                {isOpen ? (
+                  <p className="type-body mt-6 max-w-[640px] text-text-muted">
+                    {faq.answer}
+                  </p>
                 ) : null}
               </div>
             );
