@@ -1,39 +1,25 @@
 import { Container } from "@/components/layout/Container";
-import { AnchorNav } from "@/components/sections/AnchorNav";
+import { Hero } from "@/components/landing/Hero";
+import { Payout } from "@/components/landing/Payout";
+import { Steps } from "@/components/landing/Steps";
+import { Straight } from "@/components/landing/Straight";
 import { ChainStrip } from "@/components/sections/ChainStrip";
-import { Custody } from "@/components/sections/Custody";
-import { Cycle } from "@/components/sections/Cycle";
-import { DocsCta } from "@/components/sections/DocsCta";
-import { Faqs } from "@/components/sections/Faqs";
-import { Hero } from "@/components/sections/Hero";
-import { LpDesk } from "@/components/sections/LpDesk";
-import { Method } from "@/components/sections/Method";
-import { Parameters } from "@/components/sections/Parameters";
-import { Payouts } from "@/components/sections/Payouts";
-import { Pillars } from "@/components/sections/Pillars";
-import { Signals } from "@/components/sections/Signals";
 import { SiteFooter } from "@/components/sections/SiteFooter";
 import { SiteHeader } from "@/components/sections/SiteHeader";
-import { Wordmark } from "@/components/sections/Wordmark";
 
+/**
+ * Four sections: what it does, how it works, how you get paid, and the
+ * questions worth asking first. Everything longer lives at /method.
+ */
 export default function Home() {
   return (
     <Container>
       <SiteHeader />
       <ChainStrip />
       <Hero />
-      <AnchorNav />
-      <Pillars />
-      <Cycle />
-      <Method />
-      <LpDesk />
-      <Signals />
-      <Payouts />
-      <Custody />
-      <Parameters />
-      <Faqs />
-      <DocsCta />
-      <Wordmark />
+      <Steps />
+      <Payout />
+      <Straight />
       <SiteFooter />
     </Container>
   );
