@@ -51,10 +51,16 @@ contract ResidentVault {
 
     // --- profit ledger (denominated in the payout asset) -------------------
 
-    /// @notice Lifetime realized profit reported by the keeper. Monotonic.
+    /// @notice Lifetime realized profit reported by the keeper. Strictly
+    ///         monotonic: it is the keeper's own cumulative figure, and nothing
+    ///         in this contract ever reduces it.
     uint256 public realized;
-    /// @notice The desk reserve. Absorbs pool losses and is never distributed.
-    uint256 public reserved;
+    /// @notice Cumulative 25% cut of every profit increase. Also monotonic, and
+    ///         the term `owed` subtracts — so absorbing a loss cannot change
+    ///         what holders are owed in either direction.
+    uint256 public reserveAccrued;
+    /// @notice Cumulative losses the reserve has absorbed.
+    uint256 public reserveDrawn;
     /// @notice Lifetime amount already paid to holders.
     uint256 public distributed;
 
@@ -85,7 +91,7 @@ contract ResidentVault {
     event VenueSet(address indexed venue, bool allowed);
     event CapSet(address indexed asset, uint256 cap);
     event ProfitRecorded(uint256 newTotal, uint256 delta, uint256 toReserve);
-    event ReserveDrawn(uint256 amount, string reason);
+    event ReserveDrawn(uint256 amount, uint256 remaining, string reason);
     event Distributed(uint256 total, uint256 recipients);
     event Executed(address indexed venue, uint256 value, bytes4 selector);
     event Withdrawn(address indexed asset, address indexed to, uint256 amount);
@@ -97,6 +103,7 @@ contract ResidentVault {
     error VenueNotAllowed(address target);
     error ForbiddenSelector(bytes4 selector);
     error ProfitNotMonotonic(uint256 current, uint256 submitted);
+    error ReserveExhausted(uint256 requested, uint256 available);
     error ExceedsOwed(uint256 requested, uint256 owed);
     error ExceedsRateLimit(uint256 requested, uint256 remaining);
     error LengthMismatch();
@@ -201,10 +208,20 @@ contract ResidentVault {
 
     // --- profit ledger -----------------------------------------------------
 
-    /// @notice Amount owed to holders: realized profit, less the reserve, less
-    ///         what has already been paid. Carries forward; never resets.
+    /// @notice The reserve's current balance: everything accrued, less what has
+    ///         been spent absorbing losses.
+    function reserved() public view returns (uint256) {
+        return reserveAccrued - reserveDrawn;
+    }
+
+    /// @notice Amount owed to holders: realized profit, less the cumulative
+    ///         reserve accrual, less what has already been paid. Carries
+    ///         forward; never resets.
+    /// @dev Deliberately built on `reserveAccrued` rather than the reserve
+    ///      balance. Were it built on the balance, spending the reserve on a
+    ///      loss would silently increase what holders are owed.
     function owed() public view returns (uint256) {
-        return realized - reserved - distributed;
+        return realized - reserveAccrued - distributed;
     }
 
     /**
@@ -217,16 +234,22 @@ contract ResidentVault {
         uint256 delta = newTotal - realized;
         uint256 toReserve = (delta * RESERVE_BPS) / BPS;
         realized = newTotal;
-        reserved += toReserve;
+        reserveAccrued += toReserve;
         emit ProfitRecorded(newTotal, delta, toReserve);
     }
 
-    /// @notice Spend reserve against a realized loss on the pools. Reduces the
-    ///         reserve only; it can never reach into what holders are owed.
+    /**
+     * @notice Spend reserve against a realized loss on the pools.
+     * @dev Touches neither `realized` nor `reserveAccrued`, both of which stay
+     *      monotonic. Since `owed` is a function of those two and `distributed`,
+     *      a loss is absorbed entirely by the reserve and is invisible to
+     *      holders — which is the whole point of holding one.
+     */
     function drawReserve(uint256 amount, string calldata reason) external onlyKeeper {
-        reserved -= amount; // reverts on underflow: the reserve cannot go negative
-        realized -= amount; // the loss is real, so lifetime profit falls with it
-        emit ReserveDrawn(amount, reason);
+        uint256 available = reserved();
+        if (amount > available) revert ReserveExhausted(amount, available);
+        reserveDrawn += amount;
+        emit ReserveDrawn(amount, available - amount, reason);
     }
 
     // --- distribution ------------------------------------------------------

@@ -281,3 +281,39 @@ test("the keeper cannot withdraw", async () => {
   const res = await chain.call(vault, "withdraw", [usdg.hex, keeper.hex, 1n], { from: keeper });
   assert.equal(res.error, "NotOwner");
 });
+
+// --- Regression: a loss must not make later profit reports credit holders twice
+
+test("a reserve draw does not inflate owed when profit is next reported", async () => {
+  const { chain, keeper, vault } = await fixture();
+
+  await chain.call(vault, "recordRealized", [1_000n * USDG], { from: keeper });
+  const owedBefore = await chain.read(vault, "owed", []);
+  assert.equal(owedBefore, 750n * USDG);
+
+  await chain.call(vault, "drawReserve", [200n * USDG, "band closed below"], { from: keeper });
+
+  // The keeper's own books still say lifetime realized profit is 1,000. Its next
+  // report is that same cumulative figure. Absorbing a loss must not turn that
+  // into new profit for holders.
+  await chain.call(vault, "recordRealized", [1_000n * USDG], { from: keeper });
+
+  assert.equal(
+    await chain.read(vault, "owed", []),
+    owedBefore,
+    "re-reporting the same cumulative total after a draw must be a no-op",
+  );
+});
+
+test("distribution is blocked until the owner sets a cap", async () => {
+  const chain = await Chain.create(artifacts);
+  const [deployer, keeper, holderA] = chain.wallets;
+  const usdg = await chain.deploy("MockERC20", ["USDG", "USDG", 6]);
+  const vault = await chain.deploy("ResidentVault", [deployer.hex, keeper.hex, usdg.hex]);
+  await chain.call(usdg, "mint", [vault.hex, 1_000_000n * USDG]);
+  await chain.call(vault, "recordRealized", [1_000n * USDG], { from: keeper });
+
+  // No setCap yet: the limit defaults to zero.
+  const res = await chain.call(vault, "distribute", [[holderA.hex], [1n * USDG]], { from: keeper });
+  assert.equal(res.error, "ExceedsRateLimit", "a fresh vault must not pay out before a cap is chosen");
+});
