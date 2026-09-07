@@ -6,6 +6,9 @@
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
+    // Lets the simulator use explicit .ts specifiers, which Node's ESM resolver
+    // requires when running the same sources directly under --experimental-strip-types.
+    "allowImportingTsExtensions": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
