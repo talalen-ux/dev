@@ -95,6 +95,7 @@ contract ResidentVault {
     event Distributed(uint256 total, uint256 recipients);
     event Executed(address indexed venue, uint256 value, bytes4 selector);
     event Withdrawn(address indexed asset, address indexed to, uint256 amount);
+    event PositionReceived(address indexed collection, uint256 indexed tokenId);
 
     // --- errors ------------------------------------------------------------
 
@@ -109,6 +110,7 @@ contract ResidentVault {
     error LengthMismatch();
     error ZeroAddress();
     error CallFailed(bytes returndata);
+    error UnexpectedPosition(address collection);
 
     // --- modifiers ---------------------------------------------------------
 
@@ -132,6 +134,31 @@ contract ResidentVault {
     }
 
     receive() external payable {}
+
+    /**
+     * @notice Accept an LP position NFT.
+     * @dev Uniswap v3 liquidity is an ERC721, so without this the vault cannot
+     *      hold a band at all — `mint` reverts on transfer to a contract that
+     *      does not implement the receiver. Restricted to allowlisted
+     *      collections so the vault cannot be griefed with arbitrary NFTs, and
+     *      so a position can only arrive from a position manager the owner has
+     *      already sanctioned.
+     */
+    function onERC721Received(address, address, uint256 tokenId, bytes calldata)
+        external
+        returns (bytes4)
+    {
+        if (!isVenue[msg.sender]) revert UnexpectedPosition(msg.sender);
+        emit PositionReceived(msg.sender, tokenId);
+        return this.onERC721Received.selector;
+    }
+
+    /// @notice ERC165, so a position manager can detect the receiver.
+    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
+        return
+            interfaceId == 0x01ffc9a7 || // ERC165
+            interfaceId == 0x150b7a02; // ERC721Receiver
+    }
 
     // --- administration ----------------------------------------------------
 
@@ -201,6 +228,8 @@ contract ResidentVault {
     /// @notice Approve a sanctioned venue to pull a token. Spender-gated to the
     ///         same allowlist `exec` uses, so an approval can never name an
     ///         address the desk is not permitted to trade with.
+    /// @dev This is how band capital reaches a position manager: the keeper
+    ///      approves the manager, then opens the band through {exec}.
     function approveVenue(address token, address venue, uint256 amount) external onlyKeeper {
         if (!isVenue[venue]) revert VenueNotAllowed(venue);
         IERC20(token).approve(venue, amount);

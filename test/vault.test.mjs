@@ -317,3 +317,43 @@ test("distribution is blocked until the owner sets a cap", async () => {
   const res = await chain.call(vault, "distribute", [[holderA.hex], [1n * USDG]], { from: keeper });
   assert.equal(res.error, "ExceedsRateLimit", "a fresh vault must not pay out before a cap is chosen");
 });
+
+// --- LP band positions ------------------------------------------------------
+// Uniswap v3 liquidity is an ERC721, so a vault that cannot receive one cannot
+// hold a band at all.
+
+test("the vault accepts an LP position from an allowlisted position manager", async () => {
+  const { chain, deployer, vault } = await fixture();
+  const manager = await chain.deploy("MockPositionManager", []);
+  await chain.call(vault, "setVenue", [manager.hex, true], { from: deployer });
+
+  const res = await chain.call(manager, "mint", [vault.hex]);
+
+  assert.equal(res.ok, true, `mint reverted: ${res.error}`);
+  assert.equal((await chain.read(manager, "ownerOf", [1n])).toLowerCase(), vault.hex.toLowerCase());
+});
+
+test("a position from an unsanctioned collection is refused", async () => {
+  const { chain, vault } = await fixture();
+  const rogue = await chain.deploy("MockPositionManager", []);
+  // Not allowlisted: the vault must not accept arbitrary NFTs.
+  const res = await chain.call(rogue, "mint", [vault.hex]);
+  assert.equal(res.ok, false, "the vault must refuse an unsanctioned position");
+});
+
+test("the vault advertises the ERC721 receiver interface", async () => {
+  const { chain, vault } = await fixture();
+  assert.equal(await chain.read(vault, "supportsInterface", ["0x150b7a02"]), true);
+  assert.equal(await chain.read(vault, "supportsInterface", ["0xffffffff"]), false);
+});
+
+test("band capital reaches a position manager through the allowlist", async () => {
+  const { chain, deployer, keeper, usdg, vault } = await fixture();
+  const manager = await chain.deploy("MockPositionManager", []);
+  await chain.call(vault, "setVenue", [manager.hex, true], { from: deployer });
+
+  // The keeper approves the manager, which is how a band gets funded.
+  const res = await chain.call(vault, "approveVenue", [usdg.hex, manager.hex, 10_000n * USDG], { from: keeper });
+  assert.equal(res.ok, true);
+  assert.equal(await chain.read(usdg, "allowance", [vault.hex, manager.hex]), 10_000n * USDG);
+});
