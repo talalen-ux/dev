@@ -1,40 +1,96 @@
-# What I need from you
+# Integrations
 
-The engines are built and tested. What is missing is everything chain-specific:
-this session has no network access at all, so I could not look up a single
-Robinhood Chain address, and I have not guessed any. A wrong router address is
-funds sent to a stranger, so `src/lib/chain.ts` throws on startup naming the
-missing variable rather than defaulting to anything.
+Most of the chain constants are now filled in. This records where each came
+from, how far it has been checked, and what is still outstanding.
 
-Fill in `.env.example` and the whole product runs against the real chain.
+## Verification status — read this first
 
-## 1. Chain access
+Direct access to `docs.robinhood.com`, `developers.uniswap.org`, the Robinhood
+Chain RPC and its block explorer are all blocked by this environment's egress
+policy. What worked was web search and `raw.githubusercontent.com`.
 
-| Variable | What it is |
-| --- | --- |
-| `RESIDENT_RPC_URL` | A Robinhood Chain RPC endpoint. Archive access if you want the smart-LP tracker to backfill more than the recent window. |
-| `RESIDENT_CHAIN_ID` | Numeric chain id. |
+So every address below was transcribed from an official source and **fetched
+twice from two different URLs**, matching character-for-character both times.
+That proves the transcription is faithful. It does **not** prove the address
+holds the contract it is labelled with, because nothing has been checked
+against the chain.
 
-Also tell me the chain's **EVM version**. `test/harness.mjs` pins `shanghai`;
-solc now defaults to something newer, and a mismatch produces bytecode that
-reverts with `invalid opcode` on deploy.
+```bash
+RESIDENT_USDG=0x... RESIDENT_VAULT=0x... npm run verify:chain
+```
 
-## 2. Contracts
+Confirms the chain id, that every address has bytecode, and that USDG answers
+`symbol()` and `decimals()`. Non-zero exit on any failure, so it can gate a
+deploy. **Run it before anything touches money.**
 
-| Variable | What it is | Why |
+## 1. Chain access — found
+
+| | Mainnet | Testnet |
 | --- | --- | --- |
-| `RESIDENT_USDG` | USDG token | Quote asset for every position and payout |
-| `RESIDENT_V3_FACTORY` | Uniswap v3 factory | Pool discovery |
-| `RESIDENT_V3_QUOTER` | QuoterV2 | The fillability probe and impact sweep |
-| `RESIDENT_V3_ROUTER` | SwapRouter | Execution |
-| `RESIDENT_V3_POSITION_MANAGER` | NonfungiblePositionManager | LP bands |
-| `RESIDENT_V4_POOL_MANAGER` | v4 PoolManager | Only if v4 pools are in scope |
-| `RESIDENT_V4_QUOTER` | v4 Quoter | Only if v4 pools are in scope |
-| `RESIDENT_PONS_FEE_ESCROW` | Pons v2 fee escrow | Where the $RES creator fee accrues |
+| Chain id | `4663` | `46630` |
+| RPC | `https://rpc.mainnet.chain.robinhood.com` | `https://rpc.testnet.chain.robinhood.com` |
+| Explorer | `https://robinhoodchain.blockscout.com` | same |
+| Gas token | ETH | ETH |
 
-Every one of these must also be added to the vault's allowlist after deploy —
-`setVenue(address,bool)`, owner only. The keeper cannot reach anything that is
-not on that list.
+Robinhood Chain is an Arbitrum Orbit L2. The public RPC is rate-limited and not
+recommended for production — QuickNode, Dwellir and ArrowRPC publish endpoints.
+Set `RESIDENT_RPC_URL` to override.
+
+**This row is the weakest link.** It comes from web search rather than the docs
+site, which is blocked. Confirm the chain id first; `verify:chain` does it in
+one call.
+
+Still needed: the chain's **EVM version**. `test/harness.mjs` pins `shanghai`,
+solc defaults to something newer, and a mismatch produces bytecode that reverts
+with `invalid opcode` on deploy.
+
+## 2. Contracts — found, except USDG
+
+From `github.com/Uniswap/contracts/blob/main/deployments/4663.md`:
+
+| Contract | Address |
+| --- | --- |
+| UniswapV3Factory | `0x1f7d7550b1b028f7571e69a784071f0205fd2efa` |
+| QuoterV2 | `0x33e885ed0ec9bf04ecfb19341582aadcb4c8a9e7` |
+| SwapRouter02 | `0xcaf681a66d020601342297493863e78c959e5cb2` |
+| NonfungiblePositionManager | `0x73991a25c818bf1f1128deaab1492d45638de0d3` |
+| TickLens | `0x7dfd4f31be6814d2906bde155c3e1b146eac1468` |
+| UniswapInterfaceMulticall | `0x282a3c4d320cc7f0d5eaf56b8029e4b88338f0a3` |
+| v4 PoolManager | `0x8366a39cc670b4001a1121b8f6a443a643e40951` |
+| v4 Quoter | `0x8dc178efb8111bb0973dd9d722ebeff267c98f94` |
+| v4 PositionManager | `0x58daec3116aae6d93017baaea7749052e8a04fa7` |
+| v4 StateView | `0xf3334192d15450cdd385c8b70e03f9a6bd9e673b` |
+| UniversalRouter | `0x8876789976decbfcbbbe364623c63652db8c0904` |
+| Permit2 | `0x000000000022d473030f116ddee9f6b43ac78ba3` |
+
+Permit2 matches its canonical cross-chain address, which is a third
+independent check on that row.
+
+From `github.com/ponsdotdev/ponsfamily`:
+
+| Contract | Address |
+| --- | --- |
+| PonsV2LaunchFactory | `0x7eD598BcEf8bd9Edd8C97A195C6d13f40801EC7e` |
+| PonsLaunchFactory (v1) | `0xA5aAb3F0c6EeadF30Ef1D3Eb997108E976351feB` |
+
+**A correction to what I asked for last time.** There is no static Pons fee
+escrow to configure. V2 keeps a claim-based `IPonsV2FeeEscrow` ledger rather
+than one escrow contract, and every launch mints into its own bonding curve, so
+there is no single address. What the desk needs is the factory (above) plus the
+$RES launch address once it exists — set `RESIDENT_TOKEN`. The vault is named
+as the launch's creator-fee recipient and the keeper claims against the ledger.
+
+### Still outstanding
+
+| Variable | What | Why I could not find it |
+| --- | --- | --- |
+| `RESIDENT_USDG` | USDG token on Robinhood Chain | Confirmed as the chain's native stablecoin, issued by Paxos, but no source I could reach published the address. `docs.robinhood.com/chain/contracts` and `docs.paxos.com` are both blocked. One lookup on the explorer settles it. |
+| `RESIDENT_VAULT` | Your deployed vault | Does not exist yet |
+| `RESIDENT_TOKEN` | The $RES launch | Does not exist yet |
+
+Everything the keeper touches must also go on the vault's allowlist after
+deploy — `setVenue(address,bool)`, owner only. The keeper cannot reach anything
+that is not on that list.
 
 ## 3. An indexer — the one integration that is not just an address
 
