@@ -321,3 +321,31 @@ test("with no registry supplied the check is skipped, not silently passed", () =
   const c = classify(withAddress(REAL_AMC), 5);
   assert.notEqual(c.classification, "not-canonical");
 });
+
+test("a tokenized ETF is refused as policy, not as a fake", async () => {
+  const { ETF_TOKENS, STOCK_TOKENS, etfAddresses, tradableAddresses } =
+    await import("../src/lib/chain.ts");
+
+  const tradable = tradableAddresses();
+  const etfs = etfAddresses();
+
+  const spy = {
+    ...pool({ price: 9, liquidity: 20_000n * 10n ** 12n }),
+    token0: { symbol: "SPY", decimals: 18, address: ETF_TOKENS.SPY.address },
+  };
+
+  const c = classify(spy, 5, { canonical: tradable, etfs });
+  assert.equal(c.classification, "excluded-etf");
+  assert.match(c.reason, /categorically/);
+
+  const v = evaluate(spy, "SPY", 5, 10_000, 4, { canonical: tradable, etfs });
+  assert.equal(v.actionable, false);
+  assert.match(v.blockedBy, /ETF/);
+
+  // A real stock token in the same pool shape is allowed through.
+  const amc = {
+    ...pool({ price: 9, liquidity: 20_000n * 10n ** 12n }),
+    token0: { symbol: "AMC", decimals: 18, address: STOCK_TOKENS.AMC.address },
+  };
+  assert.equal(evaluate(amc, "AMC", 5, 10_000, 4, { canonical: tradable, etfs }).actionable, true);
+});

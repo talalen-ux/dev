@@ -130,16 +130,32 @@ export function impactVsSpot(pool: PoolState, notionalUsd: number): number | nul
 export type Classification = {
   impact1k: number | null;
   impact10k: number | null;
-  classification: "eligible" | "deep" | "unfillable" | "not-canonical";
+  classification:
+    | "eligible"
+    | "deep"
+    | "unfillable"
+    | "not-canonical"
+    | "excluded-etf";
   reason: string;
 };
 
 export type SurveyOptions = {
   /**
-   * Lowercased addresses of canonical tokens. When supplied, an instrument
-   * whose token is not in the set is rejected outright.
+   * Lowercased addresses the desk may take inventory in. When supplied, an
+   * instrument whose token is not in the set is rejected outright.
+   *
+   * Pass `tradableAddresses()` from lib/chain: it holds the canonical stock
+   * tokens and quote assets but deliberately omits the tokenized ETFs, which
+   * the method excludes categorically.
    */
   canonical?: Set<string>;
+  /**
+   * Lowercased addresses of canonical tokenized ETFs. Supplying this only
+   * changes the wording of the rejection — an ETF is refused either way — but it
+   * separates "excluded by policy" from "not a real token", which are very
+   * different things for an operator reading the board.
+   */
+  etfs?: Set<string>;
 };
 
 /**
@@ -164,13 +180,16 @@ export function classify(
   if (opts.canonical) {
     const address = pool.token0.address?.toLowerCase();
     if (!address || !opts.canonical.has(address)) {
+      const isEtf = address ? (opts.etfs?.has(address) ?? false) : false;
       return {
         impact1k: null,
         impact10k: null,
-        classification: "not-canonical",
-        reason: address
-          ? `${address} is not a canonical Robinhood Stock Token`
-          : "token address unknown — cannot confirm it is canonical",
+        classification: isEtf ? "excluded-etf" : "not-canonical",
+        reason: isEtf
+          ? "tokenized ETF — excluded from the program categorically"
+          : address
+            ? `${address} is not a canonical Robinhood Stock Token`
+            : "token address unknown — cannot confirm it is canonical",
       };
     }
   }
@@ -298,7 +317,12 @@ export function evaluate(
   reference: number,
   inventory: number,
   basis: number,
-  opts: { sessionOpen?: boolean; params?: Params; canonical?: Set<string> } = {},
+  opts: {
+    sessionOpen?: boolean;
+    params?: Params;
+    canonical?: Set<string>;
+    etfs?: Set<string>;
+  } = {},
 ): Verdict {
   const p = opts.params ?? DEFAULT_PARAMS;
 
@@ -314,7 +338,10 @@ export function evaluate(
         probe: { yield: 0, filled: false, passed: false, ticksCrossed: 0 },
         sizing: null,
         actionable: false,
-        blockedBy: "not a canonical Robinhood Stock Token",
+        blockedBy:
+          address && opts.etfs?.has(address)
+            ? "tokenized ETF — excluded categorically"
+            : "not a canonical Robinhood Stock Token",
       };
     }
   }

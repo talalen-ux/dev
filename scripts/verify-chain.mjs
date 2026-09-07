@@ -19,7 +19,7 @@
  * Exit code is non-zero if anything fails, so it can gate a deploy.
  */
 
-import { STOCK_TOKENS, addressManifest, requireChain } from "../src/lib/chain.ts";
+import { ALL_TOKENS, addressManifest, requireChain } from "../src/lib/chain.ts";
 
 const rpc = async (method, params = []) => {
   const res = await fetch(config.rpcUrl, {
@@ -128,32 +128,28 @@ try {
   failures++;
 }
 
-// 5. The canonical stock-token registry gates what the desk may hold.
-console.log("\nCanonical stock tokens:");
-const tickers = Object.keys(STOCK_TOKENS);
-if (tickers.length === 0) {
-  console.log(
-    bad(
-      "STOCK_TOKENS is empty — the desk cannot tell a real stock token from an\n" +
-        "    impostor with the same ticker. Populate it from\n" +
-        "    docs.robinhood.com/chain/contracts before deploying capital.",
-    ),
-  );
-  failures++;
-} else {
-  for (const [ticker, address] of Object.entries(STOCK_TOKENS)) {
-    try {
-      const symbol = decodeString(await call(address, "0x95d89b41"));
-      if (symbol === ticker) console.log(ok(`${ticker.padEnd(8)} ${address}`));
-      else {
-        console.log(bad(`${ticker.padEnd(8)} ${address} reports symbol ${symbol}`));
-        failures++;
-      }
-    } catch (err) {
-      console.log(bad(`${ticker.padEnd(8)} ${address} ${err.message}`));
-      failures++;
-    }
+// 5. Every canonical token must report the ticker the registry claims for it.
+//    This is the check that catches a row transposed on the source page: the
+//    checksum proves the address was copied correctly, only the chain proves it
+//    was copied onto the right line.
+const entries = Object.entries(ALL_TOKENS);
+console.log(`\nCanonical token registry (${entries.length} tokens):`);
+let mismatches = 0;
+for (const [ticker, entry] of entries) {
+  try {
+    const symbol = decodeString(await call(entry.address, "0x95d89b41"));
+    if (symbol === ticker) continue;
+    console.log(bad(`${ticker.padEnd(8)} ${entry.address} reports symbol ${symbol ?? "?"}`));
+    mismatches++;
+    failures++;
+  } catch (err) {
+    console.log(bad(`${ticker.padEnd(8)} ${entry.address} ${err.message}`));
+    mismatches++;
+    failures++;
   }
+}
+if (mismatches === 0) {
+  console.log(ok(`all ${entries.length} tokens report the expected symbol`));
 }
 
 console.log(

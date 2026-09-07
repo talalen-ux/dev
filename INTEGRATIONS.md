@@ -87,11 +87,32 @@ From `docs.robinhood.com/chain/contracts`:
 | USDG | `0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168` |
 | WETH | `0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73` |
 
+### The canonical token registry — complete
+
+`src/lib/tokens.ts` holds all 194 tokens from the contracts page: **177 stock
+tokens** and **17 tokenized ETFs**, kept apart because the method excludes ETFs
+categorically.
+
+Integrity, checked on every commit by `test/registry.test.mjs`:
+
+- All 194 addresses well-formed and unique, none colliding with USDG or WETH.
+- 193 carry a valid **EIP-55 checksum**; LLY is published all-lowercase, which
+  is a legal unchecksummed form. Changing one hex character changes the required
+  capitalisation almost every time, so this is real evidence of faithful
+  transcription rather than a formatting check.
+- The ETF split was derived two independent ways — an explicit ticker list and a
+  name-keyword scan — which agreed on all 194 rows. Worth doing, because six of
+  the seventeen carry no "ETF" in their name at all (QQQ, SGOV, GLD, SLV, USO,
+  EWY).
+
+What the checksum cannot catch is a **transposed row** — a correctly copied
+address on the wrong ticker. Only the chain settles that, so `verify:chain`
+reads `symbol()` back from all 194 and compares.
+
 ### Still outstanding
 
 | Variable | What | Status |
 | --- | --- | --- |
-| `STOCK_TOKENS` in `src/lib/chain.ts` | Canonical Robinhood Stock Token addresses, by ticker | **Empty, and blocking.** See below. |
 | `RESIDENT_VAULT` | Your deployed vault | Does not exist yet |
 | `RESIDENT_TOKEN` | The $RES launch | Does not exist yet |
 

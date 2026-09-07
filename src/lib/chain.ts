@@ -24,6 +24,8 @@
  *                   the weakest link in the list — confirm it first)
  */
 
+import { ALL_TOKENS, ETF_TOKENS, STOCK_TOKENS } from "./tokens.ts";
+
 export const MAINNET = {
   name: "Robinhood Chain",
   chainId: 4663,
@@ -54,34 +56,64 @@ export const TOKENS = {
 } as const;
 
 /**
- * Canonical Robinhood Stock Tokens, keyed by ticker.
- *
- * Empty until filled from the same docs page. The desk MUST NOT trade a stock
- * token that is not in here: a fillability probe proves a pool can be sold
- * into, not that the thing being bought is the real equity. An impostor token
- * with the right ticker in a thin pool would look like a textbook eligible
- * instrument — thin book, big deviations — and the desk would buy worthless
- * inventory with real USDG. The registry is the only defence against that, so
- * populate it before deploying capital.
+ * The canonical registry lives in ./tokens.ts, generated from the chain's
+ * contracts page. The desk MUST NOT hold a token that is not in it: a
+ * fillability probe proves a pool can be sold into, not that the thing being
+ * bought is the real equity.
  */
-export const STOCK_TOKENS: Record<string, string> = {
-  // "AMC": "0x...",
-};
+export { ALL_TOKENS, ETF_TOKENS, STOCK_TOKENS };
+export type { TokenEntry } from "./tokens.ts";
 
-/** Lowercased set of every address the desk is permitted to hold. */
-export function canonicalAddresses(
-  stock: Record<string, string> = STOCK_TOKENS,
-): Set<string> {
+/**
+ * Lowercased addresses the desk may take inventory in.
+ *
+ * Stock tokens plus the quote assets — deliberately NOT the tokenized ETFs,
+ * which are canonical but excluded from the program categorically.
+ */
+export function tradableAddresses(): Set<string> {
   return new Set(
-    [TOKENS.usdg, TOKENS.weth, ...Object.values(stock)].map((a) => a.toLowerCase()),
+    [
+      TOKENS.usdg,
+      TOKENS.weth,
+      ...Object.values(STOCK_TOKENS).map((t) => t.address),
+    ].map((a) => a.toLowerCase()),
   );
 }
 
-/** Whether an address is a canonical token the desk may hold. */
-export const isCanonical = (
-  address: string,
-  stock: Record<string, string> = STOCK_TOKENS,
-) => canonicalAddresses(stock).has(address.toLowerCase());
+/** Lowercased addresses of the tokenized ETFs, which are canonical but barred. */
+export function etfAddresses(): Set<string> {
+  return new Set(
+    Object.values(ETF_TOKENS).map((t) => t.address.toLowerCase()),
+  );
+}
+
+/** Lowercased addresses that are canonical at all, ETFs included. */
+export function canonicalAddresses(): Set<string> {
+  return new Set(
+    [
+      TOKENS.usdg,
+      TOKENS.weth,
+      ...Object.values(ALL_TOKENS).map((t) => t.address),
+    ].map((a) => a.toLowerCase()),
+  );
+}
+
+/** Whether an address is a canonical Robinhood token at all. */
+export const isCanonical = (address: string) =>
+  canonicalAddresses().has(address.toLowerCase());
+
+/** Whether the desk is permitted to take inventory in this token. */
+export const isTradable = (address: string) =>
+  tradableAddresses().has(address.toLowerCase());
+
+/** Ticker for a canonical address, or null. */
+export function tickerFor(address: string): string | null {
+  const lower = address.toLowerCase();
+  for (const [ticker, entry] of Object.entries(ALL_TOKENS)) {
+    if (entry.address.toLowerCase() === lower) return ticker;
+  }
+  return null;
+}
 
 /** Uniswap deployments on chain 4663, from the official Uniswap contracts repo. */
 export const UNISWAP = {
