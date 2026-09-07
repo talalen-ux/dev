@@ -29,30 +29,26 @@ export function Cycle() {
           </li>
         ))}
 
-        {/* The terminal split: the sequence ends by dividing, not continuing. */}
-        <li className="flex flex-col gap-3 bg-bg-secondary p-6">
-          <span className="type-label text-brand-primary tabular-nums">08</span>
-          <h3 className="type-h5 text-text-primary">Split</h3>
+        {/* The terminal split: the sequence ends by dividing, not continuing.
+            This cell is lime in both themes, so its text takes the constant
+            on-brand ink rather than the theme's own. */}
+        <li className="flex flex-col gap-3 bg-brand-fill p-6 text-on-brand">
+          <span className="type-label tabular-nums opacity-70">08</span>
+          <h3 className="type-h5">Split</h3>
           <div className="flex flex-col gap-2">
             <div className="flex items-baseline justify-between gap-3">
-              <span className="type-body-sm text-text-primary">Holders</span>
-              <span className="type-label text-brand-primary tabular-nums">
-                75%
-              </span>
+              <span className="type-body-sm">Holders</span>
+              <span className="type-label tabular-nums">75%</span>
             </div>
             <div
               aria-hidden
-              className="flex h-1.5 w-full overflow-hidden bg-rule"
+              className="flex h-1.5 w-full overflow-hidden bg-on-brand/25"
             >
-              <span className="h-full w-3/4 bg-brand-primary" />
+              <span className="h-full w-3/4 bg-on-brand" />
             </div>
             <div className="flex items-baseline justify-between gap-3">
-              <span className="type-body-sm text-text-primary">
-                Desk reserve
-              </span>
-              <span className="type-label text-text-secondary tabular-nums">
-                25%
-              </span>
+              <span className="type-body-sm opacity-70">Desk reserve</span>
+              <span className="type-label tabular-nums opacity-70">25%</span>
             </div>
           </div>
         </li>

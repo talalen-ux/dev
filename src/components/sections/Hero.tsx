@@ -3,7 +3,7 @@ import { HERO_HEADLINE, HERO_NOTE, HERO_STANDFIRST } from "@/content/resident";
 /** The thesis, stated once, at full size. */
 export function Hero() {
   return (
-    <section className="border-t-8 border-rule pt-11 pb-xxl">
+    <section className="border-t-8 border-brand-fill pt-11 pb-xxl">
       <h1 className="type-h1 max-w-[900px] text-[32px] leading-[36px] text-balance text-text-primary sm:text-[40px] sm:leading-[43px] lg:text-[48px] lg:leading-[51px]">
         {HERO_HEADLINE}
       </h1>

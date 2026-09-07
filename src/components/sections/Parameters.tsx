@@ -5,7 +5,7 @@ export function Parameters() {
   return (
     <section
       id="parameters"
-      className="border-t-4 border-brand-primary py-xxl"
+      className="border-t-4 border-brand-fill py-xxl"
     >
       <div className="flex flex-col gap-12 lg:flex-row">
         <div className="flex shrink-0 items-start gap-6 lg:w-[276px]">

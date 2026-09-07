@@ -6,18 +6,26 @@
    Resident's own.
    --------------------------------------------------------------------------- */
 @theme {
-  /* Surface + ink. The pastel-orange ground is the default view; the near-black
-     palette sits behind the header toggle (see [data-theme="dark"]). */
-  --color-bg-primary: #ffdcc2;
-  --color-bg-secondary: #f5ceb0;
-  --color-text-primary: #121212;
-  --color-text-secondary: #6b5b4e;
-  --color-brand-primary: #4f6b22;
+  /* White ground, green-biased greys, lime accent.
 
-  /* Hairline rules across the page are the ink at 20% */
-  --color-rule: rgba(18, 18, 18, 0.2);
-  /* Body copy inside cards/accordions sits at 70% rather than the muted token */
-  --color-text-muted: rgba(18, 18, 18, 0.7);
+     Lime is split across two tokens on purpose. True lime (#C1FF72) measures
+     1.18:1 against white, so it cannot carry text or hairlines — it is the
+     fill colour, used where solid area makes it read. brand-primary is the
+     deepened lime that carries every accent glyph and rule at 5.1:1. In the
+     dark theme the two converge, because lime is legible on near-black. */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f1f3ee;
+  --color-text-primary: #1a1c17;
+  --color-text-secondary: #6b7065;
+  --color-brand-primary: #4c7a1e;
+  --color-brand-fill: #c1ff72;
+  /* Ink for text sitting ON brand-fill. Constant across themes, because the
+     lime surface is constant: the theme's own text colour would go white on
+     lime in dark mode and drop to 1.18:1. */
+  --color-on-brand: #1a1c17;
+
+  --color-rule: rgba(26, 28, 23, 0.15);
+  --color-text-muted: rgba(26, 28, 23, 0.72);
 
   /* Spacer scale */
   --spacing-xs: 4px;
@@ -31,13 +39,15 @@
   --font-mono-alt: var(--font-roboto-mono), ui-monospace, monospace;
 }
 
-/* The alternate near-black theme, reached from the header toggle. */
+/* The alternate near-black theme, reached from the header toggle. Here true
+   lime reaches 16:1 on the ground, so both brand tokens resolve to it. */
 :root[data-theme="dark"] {
   --color-bg-primary: #121212;
-  --color-bg-secondary: #20211e;
+  --color-bg-secondary: #1e211c;
   --color-text-primary: #ffffff;
-  --color-text-secondary: #999999;
+  --color-text-secondary: #9a9a94;
   --color-brand-primary: #c1ff72;
+  --color-brand-fill: #c1ff72;
   --color-rule: rgba(255, 255, 255, 0.2);
   --color-text-muted: rgba(255, 255, 255, 0.7);
 }
