@@ -262,3 +262,62 @@ test("a deep book stays deep even when the pool is dislocated", () => {
     "impact vs spot isolates the book's own thinness",
   );
 });
+
+// --- Token identity ---------------------------------------------------------
+// Robinhood's docs: "a token with a matching name/ticker but a different
+// contract address is not a Robinhood Stock Token." An impostor is the one
+// thing the rest of the gate cannot catch, because a fake token in a thin pool
+// looks exactly like the opportunity the desk exists to take.
+
+const REAL_AMC = "0xAbC0000000000000000000000000000000000001";
+const canonical = new Set([REAL_AMC.toLowerCase()]);
+
+const withAddress = (address) => ({
+  ...pool({ price: 9, liquidity: 20_000n * 10n ** 12n }),
+  token0: { symbol: "AMC", decimals: 18, address },
+});
+
+test("a canonical token passes the identity check and is surveyed normally", () => {
+  const c = classify(withAddress(REAL_AMC), 5, { canonical });
+  assert.notEqual(c.classification, "not-canonical");
+  assert.ok(c.impact1k !== null, "a canonical token still gets measured");
+});
+
+test("an impostor with the right ticker is rejected outright", () => {
+  const impostor = withAddress("0xdead000000000000000000000000000000000bad");
+
+  const c = classify(impostor, 5, { canonical });
+  assert.equal(c.classification, "not-canonical");
+  assert.equal(c.impact1k, null, "an impostor is not even measured");
+
+  // And it must never become actionable, however good the pool looks.
+  const v = evaluate(impostor, "AMC", 5, 10_000, 4, { canonical });
+  assert.equal(v.actionable, false);
+  assert.match(v.blockedBy, /canonical/);
+});
+
+test("an impostor would otherwise have looked like a prime opportunity", () => {
+  // Same pool, no registry supplied: thin book, +80% deviation, sells fine.
+  const impostor = withAddress("0xdead000000000000000000000000000000000bad");
+  const unguarded = evaluate(impostor, "AMC", 5, 10_000, 4);
+
+  assert.equal(
+    unguarded.actionable,
+    true,
+    "without the registry this fake token is a textbook actionable dislocation",
+  );
+});
+
+test("an unknown token address is refused rather than assumed canonical", () => {
+  const noAddress = {
+    ...pool({ price: 9, liquidity: 20_000n * 10n ** 12n }),
+    token0: { symbol: "AMC", decimals: 18 },
+  };
+  assert.equal(classify(noAddress, 5, { canonical }).classification, "not-canonical");
+  assert.equal(evaluate(noAddress, "AMC", 5, 10_000, 4, { canonical }).actionable, false);
+});
+
+test("with no registry supplied the check is skipped, not silently passed", () => {
+  const c = classify(withAddress(REAL_AMC), 5);
+  assert.notEqual(c.classification, "not-canonical");
+});

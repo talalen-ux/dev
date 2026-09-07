@@ -80,13 +80,41 @@ there is no single address. What the desk needs is the factory (above) plus the
 $RES launch address once it exists — set `RESIDENT_TOKEN`. The vault is named
 as the launch's creator-fee recipient and the keeper claims against the ledger.
 
+From `docs.robinhood.com/chain/contracts`:
+
+| Token | Address |
+| --- | --- |
+| USDG | `0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168` |
+| WETH | `0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73` |
+
 ### Still outstanding
 
-| Variable | What | Why I could not find it |
+| Variable | What | Status |
 | --- | --- | --- |
-| `RESIDENT_USDG` | USDG token on Robinhood Chain | Confirmed as the chain's native stablecoin, issued by Paxos, but no source I could reach published the address. `docs.robinhood.com/chain/contracts` and `docs.paxos.com` are both blocked. One lookup on the explorer settles it. |
+| `STOCK_TOKENS` in `src/lib/chain.ts` | Canonical Robinhood Stock Token addresses, by ticker | **Empty, and blocking.** See below. |
 | `RESIDENT_VAULT` | Your deployed vault | Does not exist yet |
 | `RESIDENT_TOKEN` | The $RES launch | Does not exist yet |
+
+## The canonical stock-token registry
+
+The contracts page carries a warning that matters more for this desk than for
+most consumers of it:
+
+> Use the addresses on this page to identify the **canonical** Robinhood Stock
+> Token for each underlying — a token with a matching name/ticker but a
+> different contract address is not a Robinhood Stock Token.
+
+An impostor is the one thing the rest of the gate cannot catch. A fake token
+with the right ticker, in a thin pool, has exactly the shallow book and violent
+deviations the desk is built to hunt — it would be classified eligible, bought
+with real USDG, and held as worthless inventory. The fillability probe does not
+help: it proves a pool can be sold into, not that the asset is real. There is a
+test asserting precisely this — without the registry, a fake AMC is a textbook
+actionable dislocation.
+
+So `classify()` and `evaluate()` now check token identity **before** any depth
+measurement, and `verify:chain` fails while `STOCK_TOKENS` is empty. Populate it
+from that page with every ticker the desk is allowed to hold, and nothing else.
 
 Everything the keeper touches must also go on the vault's allowlist after
 deploy — `setVenue(address,bool)`, owner only. The keeper cannot reach anything

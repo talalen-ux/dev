@@ -17,6 +17,8 @@
  * Sources:
  *   Uniswap v3/v4   github.com/Uniswap/contracts/blob/main/deployments/4663.md
  *   Pons            github.com/ponsdotdev/ponsfamily README
+ *   USDG / WETH     docs.robinhood.com/chain/contracts, supplied directly by
+ *                   the operator from the page itself
  *   Chain id / RPC  web search of docs.robinhood.com/chain (the docs site
  *                   itself is egress-blocked, so this one is second-hand and
  *                   the weakest link in the list — confirm it first)
@@ -37,6 +39,49 @@ export const TESTNET = {
   explorer: "https://robinhoodchain.blockscout.com",
   gasToken: "ETH",
 } as const;
+
+/**
+ * Canonical tokens, from docs.robinhood.com/chain/contracts.
+ *
+ * The docs are explicit that this registry is an identity check, not a
+ * convenience: "a token with a matching name/ticker but a different contract
+ * address is not a Robinhood Stock Token." That matters more here than in most
+ * systems — see {@link isCanonical}.
+ */
+export const TOKENS = {
+  usdg: "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+  weth: "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+} as const;
+
+/**
+ * Canonical Robinhood Stock Tokens, keyed by ticker.
+ *
+ * Empty until filled from the same docs page. The desk MUST NOT trade a stock
+ * token that is not in here: a fillability probe proves a pool can be sold
+ * into, not that the thing being bought is the real equity. An impostor token
+ * with the right ticker in a thin pool would look like a textbook eligible
+ * instrument — thin book, big deviations — and the desk would buy worthless
+ * inventory with real USDG. The registry is the only defence against that, so
+ * populate it before deploying capital.
+ */
+export const STOCK_TOKENS: Record<string, string> = {
+  // "AMC": "0x...",
+};
+
+/** Lowercased set of every address the desk is permitted to hold. */
+export function canonicalAddresses(
+  stock: Record<string, string> = STOCK_TOKENS,
+): Set<string> {
+  return new Set(
+    [TOKENS.usdg, TOKENS.weth, ...Object.values(stock)].map((a) => a.toLowerCase()),
+  );
+}
+
+/** Whether an address is a canonical token the desk may hold. */
+export const isCanonical = (
+  address: string,
+  stock: Record<string, string> = STOCK_TOKENS,
+) => canonicalAddresses(stock).has(address.toLowerCase());
 
 /** Uniswap deployments on chain 4663, from the official Uniswap contracts repo. */
 export const UNISWAP = {
@@ -90,10 +135,6 @@ export type ChainConfig = {
  * hold money.
  */
 const REQUIRED: Array<[string, string]> = [
-  [
-    "RESIDENT_USDG",
-    "USDG token on Robinhood Chain — not found in any source I could reach",
-  ],
   ["RESIDENT_VAULT", "your deployed ResidentVault"],
 ];
 
@@ -125,7 +166,7 @@ export function requireChain(
     chainId: Number(env.RESIDENT_CHAIN_ID ?? net.chainId),
     rpcUrl: env.RESIDENT_RPC_URL ?? net.rpcUrl,
     explorer: env.RESIDENT_EXPLORER ?? net.explorer,
-    usdg: env.RESIDENT_USDG!,
+    usdg: env.RESIDENT_USDG ?? TOKENS.usdg,
     vault: env.RESIDENT_VAULT!,
     resToken: env.RESIDENT_TOKEN ?? null,
     uniswap: {
@@ -152,6 +193,7 @@ export function requireChain(
 export function addressManifest(config: ChainConfig): Array<[string, string]> {
   return [
     ["USDG", config.usdg],
+    ["WETH", TOKENS.weth],
     ["UniswapV3Factory", config.uniswap.v3Factory],
     ["QuoterV2", config.uniswap.v3Quoter],
     ["SwapRouter02", config.uniswap.v3Router],

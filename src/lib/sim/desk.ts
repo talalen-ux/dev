@@ -130,8 +130,16 @@ export function impactVsSpot(pool: PoolState, notionalUsd: number): number | nul
 export type Classification = {
   impact1k: number | null;
   impact10k: number | null;
-  classification: "eligible" | "deep" | "unfillable";
+  classification: "eligible" | "deep" | "unfillable" | "not-canonical";
   reason: string;
+};
+
+export type SurveyOptions = {
+  /**
+   * Lowercased addresses of canonical tokens. When supplied, an instrument
+   * whose token is not in the set is rejected outright.
+   */
+  canonical?: Set<string>;
 };
 
 /**
@@ -141,7 +149,32 @@ export type Classification = {
  * against spot — see {@link impactVsSpot} for why the two differ and why the
  * verdict uses the latter.
  */
-export function classify(pool: PoolState, reference: number): Classification {
+export function classify(
+  pool: PoolState,
+  reference: number,
+  opts: SurveyOptions = {},
+): Classification {
+  // Identity first. Robinhood's own docs warn that a token with a matching
+  // name/ticker but a different contract address is not a Robinhood Stock
+  // Token, and an impostor is precisely what this survey would otherwise wave
+  // through: a fake ticker in a thin pool has exactly the thin book and wild
+  // deviations the desk is built to hunt. The fillability probe cannot help —
+  // it proves a pool can be sold into, not that the asset is real. So the
+  // registry check runs before any depth measurement.
+  if (opts.canonical) {
+    const address = pool.token0.address?.toLowerCase();
+    if (!address || !opts.canonical.has(address)) {
+      return {
+        impact1k: null,
+        impact10k: null,
+        classification: "not-canonical",
+        reason: address
+          ? `${address} is not a canonical Robinhood Stock Token`
+          : "token address unknown — cannot confirm it is canonical",
+      };
+    }
+  }
+
   const i1k = impact(pool, reference, 1_000);
   const i10k = impact(pool, reference, 10_000);
   const thin1k = impactVsSpot(pool, 1_000);
@@ -265,9 +298,26 @@ export function evaluate(
   reference: number,
   inventory: number,
   basis: number,
-  opts: { sessionOpen?: boolean; params?: Params } = {},
+  opts: { sessionOpen?: boolean; params?: Params; canonical?: Set<string> } = {},
 ): Verdict {
   const p = opts.params ?? DEFAULT_PARAMS;
+
+  // An impostor token never reaches the deviation gate.
+  if (opts.canonical) {
+    const address = pool.token0.address?.toLowerCase();
+    if (!address || !opts.canonical.has(address)) {
+      return {
+        symbol,
+        deviation: deviation(pool, reference),
+        spot: spotPrice(pool),
+        reference,
+        probe: { yield: 0, filled: false, passed: false, ticksCrossed: 0 },
+        sizing: null,
+        actionable: false,
+        blockedBy: "not a canonical Robinhood Stock Token",
+      };
+    }
+  }
   const threshold = p.minDeviation + (opts.sessionOpen === false ? p.sessionPremium : 0);
 
   const dev = deviation(pool, reference);

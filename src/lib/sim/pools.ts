@@ -141,8 +141,8 @@ export type FixtureSpec = {
   price: number;
   liquidity: bigint;
   fee: number;
-  token0?: { symbol: string; decimals: number };
-  token1?: { symbol: string; decimals: number };
+  token0?: { symbol: string; decimals: number; address?: string };
+  token1?: { symbol: string; decimals: number; address?: string };
   ticks?: Tick[];
 };
 

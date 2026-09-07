@@ -34,8 +34,15 @@ export type PoolState = {
   tickSpacing: number;
   /** Initialised ticks, ascending by index. */
   ticks: Tick[];
-  token0: { symbol: string; decimals: number };
-  token1: { symbol: string; decimals: number };
+  token0: TokenMeta;
+  token1: TokenMeta;
+};
+
+export type TokenMeta = {
+  symbol: string;
+  decimals: number;
+  /** Contract address. Required to check the token is the canonical one. */
+  address?: string;
 };
 
 /** sqrt(1.0001^tick) in Q96. Derived, not table-driven, so any tick is valid. */
