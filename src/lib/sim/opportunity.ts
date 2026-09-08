@@ -50,6 +50,8 @@ export type AlertConfig = {
   minPeakFraction: number;
   /** Minimum pool age, minutes. */
   minAgeMinutes: number;
+  /** See {@link estimateFees}. 1 shows the upper bound. */
+  captureEfficiency: number;
 };
 
 export const DEFAULT_ALERT_CONFIG: AlertConfig = {
@@ -59,6 +61,7 @@ export const DEFAULT_ALERT_CONFIG: AlertConfig = {
   maxBandLiquidity: 400_000,
   minPeakFraction: 0.6,
   minAgeMinutes: 20,
+  captureEfficiency: 1,
 };
 
 /**
@@ -90,13 +93,31 @@ export const bandShare = (size: number, inBand: number) => size / (size + inBand
 
 export type FeeEstimate = { m5: number; h1: number; h6: number; h24: number };
 
-/** volume × fee tier × share, per window. */
+/**
+ * volume × fee tier × share, per window.
+ *
+ * This is an UPPER BOUND on band income, not an expectation, and the gap is
+ * large. It assumes every unit of reported pool flow transacts through the
+ * band's own range at the band's full share; a pool's flow includes trades at
+ * prices the band does not cover, and in concentrated liquidity only the active
+ * tick earns.
+ *
+ * Measured against an operator dashboard: a ROUTE/USDG position at 13.3% share
+ * of $1.25M/h at a 2% fee earned $481/h against a naive $3,325/h — 14.5% of the
+ * bound. A LUCKY/USDG position at 89.1% share came in near the bound, because
+ * at that share nearly all flow does cross the band. Capture falls as share
+ * falls, so this figure is worst on exactly the deep pools it looks best on.
+ *
+ * `captureEfficiency` scales it. It defaults to 1 so the board shows the bound
+ * rather than a factor fitted to two observations — set it from your own fills.
+ */
 export function estimateFees(
   volume: VolumeWindows,
   feePips: number,
   share: number,
+  captureEfficiency = 1,
 ): FeeEstimate {
-  const rate = (feePips / 1_000_000) * share;
+  const rate = (feePips / 1_000_000) * share * captureEfficiency;
   return {
     m5: volume.m5 * rate,
     h1: volume.h1 * rate,
@@ -133,7 +154,7 @@ export function evaluatePool(
   const price = spotPrice(obs.pool);
   const inBand = liquidityInBand(obs.pool, config.bandHalfWidth);
   const share = bandShare(config.bandSize, inBand);
-  const fees = estimateFees(obs.volume, obs.pool.fee, share);
+  const fees = estimateFees(obs.volume, obs.pool.fee, share, config.captureEfficiency);
 
   // Trailing hour, annualised against the band. A ranking figure, not a promise.
   const impliedApr = (fees.h1 * 24 * 365) / config.bandSize;

@@ -22,6 +22,17 @@ export type Tick = {
 };
 
 export type PoolState = {
+  /**
+   * True when the equity/stock token is token1 rather than token0.
+   *
+   * Uniswap orders a pool's tokens by address, so which side the stock lands on
+   * is arbitrary — observed live pools include RSTR, ORBIO, PERPSHOOD and AA
+   * all marked "stock is token1". Everything else in this file is written in
+   * token0/token1 terms and is unaffected; this flag exists so callers that
+   * mean "the stock" rather than "token0" can orient themselves, and so a pool
+   * with inverted ordering is never silently read upside down.
+   */
+  stockIsToken1?: boolean;
   /** Current price as sqrt(token1/token0) in Q96. */
   sqrtPriceX96: bigint;
   /** Liquidity in the active range. */

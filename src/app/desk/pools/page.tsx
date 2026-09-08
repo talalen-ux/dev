@@ -47,9 +47,15 @@ export default async function PoolsPage() {
           now
         </h1>
         <p className="type-body max-w-[620px] text-text-secondary">
-          Thin liquidity, heavy volume, LPs winning. Estimates are what a band{" "}
-          <em>would have faced</em> over each window at a constant share — not what
-          the desk earned, and not a forecast.
+          Thin liquidity, heavy volume, LPs winning.
+        </p>
+        <p className="type-body-sm max-w-[620px] border-l-2 border-text-primary pl-4 text-text-primary">
+          Fee figures are an <strong className="font-semibold">upper bound</strong>, not an
+          estimate. They assume every unit of pool flow crosses the band at full
+          share. Against live positions, one at 13.3% share captured 14.5% of
+          this figure; one at 89.1% share captured nearly all of it. Capture
+          falls as share falls. They also exclude divergence loss, which on
+          observed positions ran −7% to −16% of capital.
         </p>
         <p className="type-body-sm border-l-2 border-brand-primary pl-4 text-text-primary">
           The desk never opens these by itself. Every one is a decision for the
