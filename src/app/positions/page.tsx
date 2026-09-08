@@ -1,4 +1,5 @@
 import { Bands, total } from "@/components/positions/Bands";
+import { HeroBand } from "@/components/layout/HeroBand";
 import { Container } from "@/components/layout/Container";
 import { SiteFooter } from "@/components/sections/SiteFooter";
 import { SiteHeader } from "@/components/sections/SiteHeader";
@@ -49,16 +50,7 @@ export default async function PositionsPage() {
     <Container>
       <SiteHeader />
 
-      {/* The lime band. It replaces the 8px brand rule this section used to
-          carry, starting at exactly the same y (pt-16 = the old border plus
-          pt-14) so nothing below it shifts. The negative margins cancel the
-          container's padding at each breakpoint, letting the fill reach the
-          container edge while the text stays on the page grid.
-
-          Everything inside takes on-brand rather than text-primary: they are
-          the same ink today, but on-brand is the one that means "legible on
-          lime", so a future palette change cannot quietly break it. */}
-      <section className="-mx-6 bg-brand-fill px-6 pt-16 pb-xl text-on-brand md:-mx-12 md:px-12 min-[1440px]:-mx-24 min-[1440px]:px-24">
+      <HeroBand>
         <h1 className="max-w-[900px] text-[40px] leading-[1.02] font-medium tracking-[-0.02em] text-balance sm:text-[56px]">
           Positions
         </h1>
@@ -70,7 +62,7 @@ export default async function PositionsPage() {
           {snap.isFixture ? "Illustrative data" : snap.chain} · updated{" "}
           {timeAgo(snap.readAt)}
         </p>
-      </section>
+      </HeroBand>
 
       {/* A public page showing invented figures as though they were live would
           be worse than showing nothing, so this is deliberately unmissable and

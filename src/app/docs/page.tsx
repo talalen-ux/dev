@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Container } from "@/components/layout/Container";
+import { HeroBand } from "@/components/layout/HeroBand";
 import { AnchorNav } from "@/components/sections/AnchorNav";
 import { Custody } from "@/components/sections/Custody";
 import { Cycle } from "@/components/sections/Cycle";
@@ -30,18 +31,18 @@ export default function DocsPage() {
     <Container>
       <SiteHeader />
 
-      <section className="border-t-8 border-brand-fill pt-11 pb-xxl">
-        <Link href="/" className="type-eyebrow text-text-secondary hover:text-text-primary">
+      <HeroBand>
+        <Link href="/" className="type-eyebrow text-on-brand/70 hover:text-on-brand">
           ← Back
         </Link>
-        <h1 className="type-h1 mt-8 max-w-[900px] text-[32px] leading-[36px] text-balance text-text-primary sm:text-[40px] sm:leading-[43px] lg:text-[48px] lg:leading-[51px]">
+        <h1 className="type-h1 mt-8 max-w-[900px] text-[32px] leading-[36px] text-balance sm:text-[40px] sm:leading-[43px] lg:text-[48px] lg:leading-[51px]">
           {HERO_HEADLINE}
         </h1>
         <div className="mt-12 flex flex-col gap-6 md:flex-row md:gap-12">
-          <p className="type-body-lg flex-1 text-text-primary">{HERO_STANDFIRST}</p>
-          <p className="type-body text-text-secondary md:w-[276px]">{HERO_NOTE}</p>
+          <p className="type-body-lg flex-1">{HERO_STANDFIRST}</p>
+          <p className="type-body text-on-brand/70 md:w-[276px]">{HERO_NOTE}</p>
         </div>
-      </section>
+      </HeroBand>
 
       <AnchorNav />
       <Pillars />
