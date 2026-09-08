@@ -15,6 +15,16 @@ import {
   type Band,
 } from "./band.ts";
 import type { PoolHistory } from "./history.ts";
+import {
+  DEFAULT_ENTRY_CONFIG,
+  DEFAULT_EXIT_CONFIG,
+  bandWidth,
+  concentratedShare,
+  evaluateEntry,
+  realisedVolatility,
+  type EntryConfig,
+  type ExitConfig,
+} from "./strategy.ts";
 
 /**
  * Sell `dx` of token0 into a single range of liquidity L at price p.
@@ -141,6 +151,7 @@ export function backtestBand(
     }
 
     const loss = divergenceLoss(band, c.price) * band.capital;
+    // Net of fees already banked, not a gross drawdown on the mark.
     const equity = config.capital + fees + loss - realisedLoss;
 
     if (equity < config.capital * (1 - config.stopLossFraction)) {
@@ -369,5 +380,174 @@ export function compare(
     winner,
     maxDeviation: deviations.length ? deviations[deviations.length - 1] : 0,
     medianDeviation: deviations.length ? deviations[Math.floor(deviations.length / 2)] : 0,
+  };
+}
+
+
+// ---------------------------------------------------------------------------
+// Managed band: the same market, played on policy rather than on constants.
+// ---------------------------------------------------------------------------
+
+export type ManagedConfig = {
+  capital: number;
+  captureEfficiency: number;
+  deployedFraction: number;
+  entry: EntryConfig;
+  exit: ExitConfig;
+  /** Intervals of history needed before the vol estimate is usable. */
+  warmup: number;
+};
+
+export const DEFAULT_MANAGED_CONFIG: ManagedConfig = {
+  capital: 10_000,
+  captureEfficiency: 1,
+  deployedFraction: 0.85,
+  entry: DEFAULT_ENTRY_CONFIG,
+  exit: DEFAULT_EXIT_CONFIG,
+  warmup: 60,
+};
+
+export type ManagedResult = {
+  strategy: "managed";
+  feesEarned: number;
+  divergenceLoss: number;
+  net: number;
+  netReturn: number;
+  rebalances: number;
+  /** Intervals holding a position at all. */
+  intervalsDeployed: number;
+  intervalsTotal: number;
+  /** Of the intervals deployed, the share spent in range. */
+  timeInRange: number;
+  /** Times the policy declined to hold because the bleed swamped the fees. */
+  standDowns: number;
+  retired: boolean;
+  /** Widths actually chosen, for inspection. */
+  medianWidth: number;
+};
+
+/**
+ * Replay the managed policy.
+ *
+ * Differences from {@link backtestBand}, each traceable to something the fixed
+ * version gets wrong:
+ *
+ *   - width tracks realised volatility instead of a constant;
+ *   - the desk sits out while expected bleed exceeds expected fees, rather than
+ *     always holding;
+ *   - the stop is on net rather than gross.
+ */
+export function backtestManaged(
+  history: PoolHistory,
+  config: ManagedConfig = DEFAULT_MANAGED_CONFIG,
+): ManagedResult {
+  const { candles, feePips } = history;
+  if (!candles.length) throw new Error("no candles");
+
+  const deployed = config.capital * config.deployedFraction;
+  let band: Band | null = null;
+  let fees = 0;
+  let realisedLoss = 0;
+  let outOfRangeRun = 0;
+  let rebalances = 0;
+  let deployedIntervals = 0;
+  let inRangeIntervals = 0;
+  let standDowns = 0;
+  let retired = false;
+  const widths: number[] = [];
+
+  const prices: number[] = [];
+
+  for (let i = 0; i < candles.length; i++) {
+    const c = candles[i];
+    prices.push(c.price);
+    if (retired) break;
+    if (i < config.warmup) continue;
+
+    const vol = realisedVolatility(prices, config.entry.width.horizon);
+    const verdict = evaluateEntry(
+      {
+        volume: c.volume,
+        liquidity: c.liquidity,
+        feePips,
+        volatility: vol,
+        deployed,
+        captureEfficiency: config.captureEfficiency,
+      },
+      config.entry,
+    );
+
+    if (!band) {
+      // Only take the position when the policy says it pays.
+      if (!verdict.enter) {
+        standDowns++;
+        continue;
+      }
+      band = openBand(c.price, verdict.halfWidth, deployed);
+      widths.push(verdict.halfWidth);
+      outOfRangeRun = 0;
+    }
+
+    deployedIntervals++;
+
+    if (inRange(band, c.price)) {
+      inRangeIntervals++;
+      outOfRangeRun = 0;
+      const share = concentratedShare(
+        deployed,
+        (band.upper - band.lower) / 2 / c.price,
+        c.liquidity,
+      );
+      fees += c.volume * (feePips / 1_000_000) * share * config.captureEfficiency;
+    } else {
+      outOfRangeRun++;
+    }
+
+    const openLoss = -divergenceLoss(band, c.price) * band.capital;
+    // Net, not gross: fees already banked count against the loss.
+    const net = fees - realisedLoss - openLoss;
+
+    if (net < -config.capital * config.exit.maxNetLossFraction) {
+      realisedLoss += openLoss;
+      retired = true;
+      break;
+    }
+
+    if (!verdict.enter) {
+      // The pool stopped paying for the risk; step out and wait.
+      realisedLoss += openLoss;
+      band = null;
+      standDowns++;
+      continue;
+    }
+
+    if (outOfRangeRun >= config.exit.rebalanceAfter) {
+      realisedLoss += openLoss;
+      const width = bandWidth(vol, config.entry.width);
+      band = openBand(c.price, width, deployed);
+      widths.push(width);
+      rebalances++;
+      outOfRangeRun = 0;
+    }
+  }
+
+  const last = candles[candles.length - 1];
+  const openLoss = band && !retired ? -divergenceLoss(band, last.price) * band.capital : 0;
+  const totalLoss = realisedLoss + openLoss;
+
+  const sorted = [...widths].sort((a, b) => a - b);
+  return {
+    strategy: "managed",
+    feesEarned: fees,
+    divergenceLoss: totalLoss,
+    net: fees - totalLoss,
+    netReturn: (fees - totalLoss) / config.capital,
+    rebalances,
+    intervalsDeployed: deployedIntervals,
+    intervalsTotal: candles.length,
+    timeInRange: deployedIntervals ? inRangeIntervals / deployedIntervals : 0,
+    standDowns,
+    retired,
+    medianWidth: sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0,
   };
 }
