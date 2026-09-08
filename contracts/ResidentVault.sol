@@ -22,6 +22,8 @@ interface IERC20 {
  *    outside the allowlist.
  *  - Approvals cannot leak. `approveVenue` is spender-gated to the same list.
  *  - Distribution is rate-limited. A per-asset rolling cap is enforced on-chain.
+ *  - 15% of every realized gain accrues to holders; the other 85% is working
+ *    capital that funds new LP positions.
  *  - The keeper is replaceable in one transaction, without moving custody.
  *  - The owner can withdraw any asset at any time, with no timelock. This is
  *    deliberate and disclosed; see {withdraw}.
@@ -30,8 +32,8 @@ interface IERC20 {
  *      keeper via {recordRealized}, because profit on an arbitrary venue cannot
  *      be derived on-chain without trusting the same quote the keeper used. The
  *      contract does not verify the figure. What it does enforce is that the
- *      reported total only ever increases, that 25% of every increase is
- *      reserved and unpayable, and that distributions can never exceed what is
+ *      reported total only ever increases, that only 15% of every increase is
+ *      ever payable to holders, and that distributions can never exceed what is
  *      owed or what the vault actually holds. A dishonest keeper can therefore
  *      under-report profit, but cannot pay out more than it reported, cannot
  *      retract a report to strand holders, and cannot move funds anywhere the
@@ -55,17 +57,27 @@ contract ResidentVault {
     ///         monotonic: it is the keeper's own cumulative figure, and nothing
     ///         in this contract ever reduces it.
     uint256 public realized;
-    /// @notice Cumulative 25% cut of every profit increase. Also monotonic, and
-    ///         the term `owed` subtracts — so absorbing a loss cannot change
-    ///         what holders are owed in either direction.
-    uint256 public reserveAccrued;
-    /// @notice Cumulative losses the reserve has absorbed.
-    uint256 public reserveDrawn;
+    /// @notice Cumulative holder share of every profit increase. Monotonic, and
+    ///         the term `owed` subtracts — so a loss on the desk's own
+    ///         positions cannot change what holders are owed in either
+    ///         direction.
+    uint256 public holderAccrued;
+    /// @notice Cumulative losses absorbed by working capital.
+    uint256 public lossesAbsorbed;
     /// @notice Lifetime amount already paid to holders.
     uint256 public distributed;
 
-    /// @notice Share of each profit increase moved to the reserve, in bps.
-    uint16 public constant RESERVE_BPS = 2_500;
+    /**
+     * @notice Share of each profit increase owed to holders, in bps.
+     *
+     * The remaining 85% is working capital: it funds new LP positions rather
+     * than sitting aside. That is a different thing from a reserve and carries
+     * different risk — a reserve only shrinks when it absorbs a loss, whereas
+     * working capital is deployed into pools and can lose value on its own.
+     * Holders are not exposed to that: {owed} is built on the accrual, so the
+     * 15% already booked survives whatever the deployed 85% does.
+     */
+    uint16 public constant HOLDER_BPS = 1_500;
     uint16 private constant BPS = 10_000;
 
     /// @notice Asset distributions are denominated and paid in.
@@ -90,8 +102,8 @@ contract ResidentVault {
     event OwnerTransferred(address indexed from, address indexed to);
     event VenueSet(address indexed venue, bool allowed);
     event CapSet(address indexed asset, uint256 cap);
-    event ProfitRecorded(uint256 newTotal, uint256 delta, uint256 toReserve);
-    event ReserveDrawn(uint256 amount, uint256 remaining, string reason);
+    event ProfitRecorded(uint256 newTotal, uint256 delta, uint256 toHolders);
+    event LossAbsorbed(uint256 amount, uint256 workingCapital, string reason);
     event Distributed(uint256 total, uint256 recipients);
     event Executed(address indexed venue, uint256 value, bytes4 selector);
     event Withdrawn(address indexed asset, address indexed to, uint256 amount);
@@ -104,7 +116,7 @@ contract ResidentVault {
     error VenueNotAllowed(address target);
     error ForbiddenSelector(bytes4 selector);
     error ProfitNotMonotonic(uint256 current, uint256 submitted);
-    error ReserveExhausted(uint256 requested, uint256 available);
+    error WorkingCapitalExhausted(uint256 requested, uint256 available);
     error ExceedsOwed(uint256 requested, uint256 owed);
     error ExceedsRateLimit(uint256 requested, uint256 remaining);
     error LengthMismatch();
@@ -237,20 +249,22 @@ contract ResidentVault {
 
     // --- profit ledger -----------------------------------------------------
 
-    /// @notice The reserve's current balance: everything accrued, less what has
-    ///         been spent absorbing losses.
-    function reserved() public view returns (uint256) {
-        return reserveAccrued - reserveDrawn;
+    /**
+     * @notice Working capital: the retained 85%, less losses it has absorbed.
+     *         This is what funds new LP positions.
+     */
+    function workingCapital() public view returns (uint256) {
+        uint256 retained = realized - holderAccrued;
+        return retained > lossesAbsorbed ? retained - lossesAbsorbed : 0;
     }
 
-    /// @notice Amount owed to holders: realized profit, less the cumulative
-    ///         reserve accrual, less what has already been paid. Carries
-    ///         forward; never resets.
-    /// @dev Deliberately built on `reserveAccrued` rather than the reserve
-    ///      balance. Were it built on the balance, spending the reserve on a
-    ///      loss would silently increase what holders are owed.
+    /// @notice Amount owed to holders: their cumulative share, less what has
+    ///         already been paid. Carries forward; never resets.
+    /// @dev Deliberately built on `holderAccrued` rather than on any balance.
+    ///      Were it built on a balance, redeploying capital into a position —
+    ///      or losing on one — would silently change what holders are owed.
     function owed() public view returns (uint256) {
-        return realized - reserveAccrued - distributed;
+        return holderAccrued - distributed;
     }
 
     /**
@@ -261,24 +275,28 @@ contract ResidentVault {
     function recordRealized(uint256 newTotal) external onlyKeeper {
         if (newTotal < realized) revert ProfitNotMonotonic(realized, newTotal);
         uint256 delta = newTotal - realized;
-        uint256 toReserve = (delta * RESERVE_BPS) / BPS;
+        uint256 toHolders = (delta * HOLDER_BPS) / BPS;
         realized = newTotal;
-        reserveAccrued += toReserve;
-        emit ProfitRecorded(newTotal, delta, toReserve);
+        holderAccrued += toHolders;
+        emit ProfitRecorded(newTotal, delta, toHolders);
     }
 
     /**
-     * @notice Spend reserve against a realized loss on the pools.
-     * @dev Touches neither `realized` nor `reserveAccrued`, both of which stay
-     *      monotonic. Since `owed` is a function of those two and `distributed`,
-     *      a loss is absorbed entirely by the reserve and is invisible to
-     *      holders — which is the whole point of holding one.
+     * @notice Book a realized loss on a position against working capital.
+     * @dev Touches neither `realized` nor `holderAccrued`, both of which stay
+     *      monotonic. Since `owed` is a function of those and `distributed`, a
+     *      loss falls entirely on the deployed 85% and is invisible to holders.
+     *
+     *      Note what this does and does not protect. Holders cannot lose what
+     *      has already accrued to them. They can still see future accrual stop,
+     *      because a desk that is losing money records no new profit to take
+     *      15% of.
      */
-    function drawReserve(uint256 amount, string calldata reason) external onlyKeeper {
-        uint256 available = reserved();
-        if (amount > available) revert ReserveExhausted(amount, available);
-        reserveDrawn += amount;
-        emit ReserveDrawn(amount, available - amount, reason);
+    function absorbLoss(uint256 amount, string calldata reason) external onlyKeeper {
+        uint256 available = workingCapital();
+        if (amount > available) revert WorkingCapitalExhausted(amount, available);
+        lossesAbsorbed += amount;
+        emit LossAbsorbed(amount, available - amount, reason);
     }
 
     // --- distribution ------------------------------------------------------

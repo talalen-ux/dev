@@ -38,25 +38,26 @@ export function Cycle() {
           <div className="flex flex-col gap-2">
             <div className="flex items-baseline justify-between gap-3">
               <span className="type-body-sm">Holders</span>
-              <span className="type-label tabular-nums">75%</span>
+              <span className="type-label tabular-nums">15%</span>
             </div>
             <div
               aria-hidden
               className="flex h-1.5 w-full overflow-hidden bg-on-brand/25"
             >
-              <span className="h-full w-3/4 bg-on-brand" />
+              <span className="h-full w-[15%] bg-on-brand" />
             </div>
             <div className="flex items-baseline justify-between gap-3">
-              <span className="type-body-sm opacity-70">Desk reserve</span>
-              <span className="type-label tabular-nums opacity-70">25%</span>
+              <span className="type-body-sm opacity-70">Working capital</span>
+              <span className="type-label tabular-nums opacity-70">85%</span>
             </div>
           </div>
         </li>
       </ol>
 
       <p className="type-body mt-8 max-w-[708px] text-text-secondary">
-        The reserve absorbs losses on the pools and is never paid out. Everything
-        else is owed to holders and carries forward until it is paid.
+        The 85% is redeployed into new positions and absorbs losses on the
+        pools; it is never paid out and holders have no claim on it. The 15% is
+        owed to holders and carries forward until it is paid.
       </p>
     </section>
   );

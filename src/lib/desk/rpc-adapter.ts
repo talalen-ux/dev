@@ -20,7 +20,8 @@ export const SELECTORS = {
   keeper: "0xaced1661",
   payoutAsset: "0x3eac5251",
   realized: "0x306cccd6",
-  reserved: "0xfe60d12c",
+  holderAccrued: "0x38fa0458",
+  workingCapital: "0xde25c369",
   distributed: "0xf84b903e",
   owed: "0xc87d6779",
   rateLimitRemaining: "0xf5b026f7",
@@ -59,13 +60,13 @@ export class RpcAdapter implements DeskAdapter {
   async snapshot(): Promise<DeskSnapshot> {
     const call = (data: string) => ethCall(this.rpcUrl, this.vaultAddress, data);
 
-    const [owner, keeper, payoutAsset, realized, reserved, distributed, owed] =
+    const [owner, keeper, payoutAsset, realized, workingCapital, distributed, owed] =
       await Promise.all([
         call(SELECTORS.owner),
         call(SELECTORS.keeper),
         call(SELECTORS.payoutAsset),
         call(SELECTORS.realized),
-        call(SELECTORS.reserved),
+        call(SELECTORS.workingCapital),
         call(SELECTORS.distributed),
         call(SELECTORS.owed),
       ]);
@@ -94,7 +95,7 @@ export class RpcAdapter implements DeskAdapter {
       },
       ledger: {
         realized: toBigInt(realized),
-        reserved: toBigInt(reserved),
+        workingCapital: toBigInt(workingCapital),
         distributed: toBigInt(distributed),
         owed: toBigInt(owed),
         cash: toBigInt(cash),

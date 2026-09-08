@@ -33,8 +33,8 @@ export function Payouts() {
 
           <div className="flex flex-col gap-8">
             <Formula
-              expr="O(t)  =  Π(t)  −  R  −  D(t)"
-              caption="Owed to holders: lifetime realized profit, less the reserve, less what has been distributed"
+              expr="O(t)  =  0.15 · Π(t)  −  D(t)"
+              caption="Owed to holders: 15% of lifetime realized profit, less what has already been distributed"
             />
             <Formula
               expr="x_h  =  O · b_h / Σⱼ b_j"

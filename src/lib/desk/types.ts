@@ -3,11 +3,11 @@
 export type LedgerState = {
   /** Lifetime realized profit, in payout-asset minor units. */
   realized: bigint;
-  /** Desk reserve. Absorbs pool losses, never distributed. */
-  reserved: bigint;
+  /** Retained 85%, less losses. Funds new LP positions; never distributed. */
+  workingCapital: bigint;
   /** Lifetime paid to holders. */
   distributed: bigint;
-  /** realized − reserved − distributed. Carries forward. */
+  /** holderAccrued (15% of realized) − distributed. Carries forward. */
   owed: bigint;
   /** Payout-asset balance actually sitting in the vault. */
   cash: bigint;

@@ -1,6 +1,6 @@
 import { PAYOUT } from "@/content/landing";
 
-/** The money. The 75/25 split is drawn, not described. */
+/** The money. The 15/85 split is drawn, not described. */
 export function Payout() {
   return (
     <section id="payout" className="border-t border-rule py-xxl">
@@ -17,18 +17,18 @@ export function Payout() {
             <div className="flex items-baseline justify-between gap-4">
               <span className="type-eyebrow text-text-primary">You</span>
               <span className="text-[20px] leading-none font-medium tabular-nums text-text-primary">
-                75%
+                15%
               </span>
             </div>
             <div aria-hidden className="flex h-3 w-full overflow-hidden bg-rule">
-              <span className="h-full w-3/4 bg-brand-fill" />
+              <span className="h-full w-[15%] bg-brand-fill" />
             </div>
             <div className="flex items-baseline justify-between gap-4">
               <span className="type-eyebrow text-text-secondary">
-                Reserve — eats the losses
+                Working capital — back into positions, takes the losses
               </span>
               <span className="type-eyebrow text-text-secondary tabular-nums">
-                25%
+                85%
               </span>
             </div>
           </div>

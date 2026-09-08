@@ -24,7 +24,7 @@ export const HERO_HEADLINE =
   "Systematic liquidity provision against reference-price dislocations in tokenized equities.";
 
 export const HERO_STANDFIRST =
-  "Resident is an autonomous market-making desk on Robinhood Chain. It prices every venue against the primary market, holds inventory where dislocations happen, sells into verified dislocations under strict profit rules, and pays 75% of realized profit to holders every 15 minutes once at least $300 is owed — keeping 25% as a desk reserve that absorbs pool losses.";
+  "Resident is an autonomous market-making desk on Robinhood Chain. It prices every venue against the primary market, holds inventory where dislocations happen, sells into verified dislocations under strict profit rules, and pays 15% of realized profit to holders every 15 minutes once at least $300 is owed — redeploying the other 85% as working capital that funds new positions and absorbs pool losses.";
 
 export const HERO_NOTE =
   "This page states the method, including the parts usually left vague. Every number below is read from the same configuration the running desk uses.";
@@ -42,8 +42,8 @@ export const PILLARS = [
   },
   {
     icon: "payout" as const,
-    eyebrow: "75% to holders",
-    body: "Realized profit less the reserve is owed to holders and carries forward. It never resets, and it pays every 15 minutes.",
+    eyebrow: "15% to holders",
+    body: "15% of realized profit is owed to holders and carries forward. It never resets, and it pays every 15 minutes.",
   },
 ] as const;
 
@@ -225,12 +225,12 @@ export const PAYOUT_STEPS = [
     body: "Every liquidation realizes proceeds minus the average cost basis of the size sold. Lifetime realized profit Π(t) accumulates monotonically.",
   },
   {
-    label: "Reserved",
-    body: "25% of each increase in realized profit moves to the desk reserve R. It absorbs losses on the pools and is never paid out.",
+    label: "Retained",
+    body: "85% of each increase in realized profit is retained as working capital. It funds new positions, absorbs losses on the pools, and is never paid out — holders have no claim on it.",
   },
   {
     label: "Owed",
-    body: "The balance owed to holders is realized profit less the reserve less what has already been paid. It carries forward and never resets.",
+    body: "The balance owed to holders is 15% of lifetime realized profit less what has already been paid. It carries forward and never resets.",
   },
   {
     label: "Paid",
@@ -342,12 +342,12 @@ export const FAQS = [
   {
     question: "When do holders get paid?",
     answer:
-      "Every 15 minutes, in USDG, once at least $300 is owed. The amount owed is lifetime realized profit less the 25% desk reserve less everything already distributed — a ledger identity that carries forward and never resets. Payment is pro-rata across an eligibility-filtered holder snapshot.",
+      "Every 15 minutes, in USDG, once at least $300 is owed. The amount owed is 15% of lifetime realized profit less everything already distributed — a ledger identity that carries forward and never resets. Payment is pro-rata across an eligibility-filtered holder snapshot.",
   },
   {
     question: "What happens when a position loses money?",
     answer:
-      "It is not sold. Every exit must clear both the reference floor and the position's own average cost basis, so losses are not realized into noise; inventory is simply held for the next event. Where the LP desk does take a loss on a pool, the 25% reserve absorbs it rather than the holder pot.",
+      "It is not sold. Every exit must clear both the reference floor and the position's own average cost basis, so losses are not realized into noise; inventory is simply held for the next event. Where the LP desk does take a loss on a pool, the retained 85% absorbs it rather than the holder pot: past accrual to holders is never clawed back, but further accrual stops until the desk has earned the loss back.",
   },
   {
     question: "Can the operator withdraw the fund?",

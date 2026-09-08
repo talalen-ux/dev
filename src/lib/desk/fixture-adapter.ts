@@ -17,8 +17,8 @@ export class FixtureAdapter implements DeskAdapter {
 
   async snapshot(): Promise<DeskSnapshot> {
     const realized = 48_213_400_000n; // 48,213.40
-    const reserved = (realized * 2500n) / 10000n;
-    const distributed = 33_900_000_000n;
+    const holderAccrued = (realized * 1500n) / 10000n;
+    const distributed = 5_900_000_000n;
 
     return {
       readAt: new Date().toISOString(),
@@ -36,9 +36,9 @@ export class FixtureAdapter implements DeskAdapter {
       },
       ledger: {
         realized,
-        reserved,
+        workingCapital: realized - holderAccrued,
         distributed,
-        owed: realized - reserved - distributed,
+        owed: holderAccrued - distributed,
         cash: 12_450_000_000n,
         rateLimitRemaining: 740_000n * M,
       },

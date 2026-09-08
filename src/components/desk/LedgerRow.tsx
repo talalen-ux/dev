@@ -3,8 +3,8 @@ import type { LedgerState, VaultState } from "@/lib/desk";
 import { usd } from "@/lib/desk";
 
 /**
- * The ledger identity, laid out as the identity: realized, less the reserve,
- * less what has been paid, leaves what is owed.
+ * The ledger identity, laid out as the identity: 15% of realized, less what
+ * has been paid, leaves what is owed.
  */
 export function LedgerRow({
   ledger,
@@ -21,10 +21,14 @@ export function LedgerRow({
     <div className="flex flex-col gap-8">
       <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
         <Stat label="Realized  Π" value={usd(ledger.realized, dp)} note="lifetime, monotonic" />
-        <Stat label="Reserve  R (25%)" value={usd(ledger.reserved, dp)} note="absorbs pool losses" />
+        <Stat
+          label="Working capital (85%)"
+          value={usd(ledger.workingCapital, dp)}
+          note="funds new LP positions"
+        />
         <Stat label="Distributed  D" value={usd(ledger.distributed, dp)} note="lifetime paid out" />
         <Stat
-          label="Owed  O = Π − R − D"
+          label="Owed (15% − D)"
           value={usd(ledger.owed, dp)}
           note="carries forward, never resets"
           emphasis

@@ -101,17 +101,17 @@ test("approvals are spender-gated to the venue allowlist", async () => {
 
 // --- The profit ledger ------------------------------------------------------
 
-test("25% of every profit increase is reserved and unpayable", async () => {
+test("15% accrues to holders and 85% becomes working capital", async () => {
   const { chain, keeper, vault } = await fixture();
 
   await chain.call(vault, "recordRealized", [1_000n * USDG], { from: keeper });
-  assert.equal(await chain.read(vault, "reserved", []), 250n * USDG);
-  assert.equal(await chain.read(vault, "owed", []), 750n * USDG);
+  assert.equal(await chain.read(vault, "owed", []), 150n * USDG);
+  assert.equal(await chain.read(vault, "workingCapital", []), 850n * USDG);
 
-  // Reported cumulatively, so the reserve applies to the delta only.
+  // Reported cumulatively, so the split applies to the delta only.
   await chain.call(vault, "recordRealized", [1_400n * USDG], { from: keeper });
-  assert.equal(await chain.read(vault, "reserved", []), 350n * USDG);
-  assert.equal(await chain.read(vault, "owed", []), 1_050n * USDG);
+  assert.equal(await chain.read(vault, "owed", []), 210n * USDG);
+  assert.equal(await chain.read(vault, "workingCapital", []), 1_190n * USDG);
 });
 
 test("realized profit is monotonic — a keeper cannot retract a report", async () => {
@@ -126,41 +126,52 @@ test("replaying a report is idempotent rather than double-counting", async () =>
   const { chain, keeper, vault } = await fixture();
   await chain.call(vault, "recordRealized", [1_000n * USDG], { from: keeper });
   await chain.call(vault, "recordRealized", [1_000n * USDG], { from: keeper });
-  assert.equal(await chain.read(vault, "owed", []), 750n * USDG);
+  assert.equal(await chain.read(vault, "owed", []), 150n * USDG);
 });
 
 test("owed carries forward across distributions and never resets", async () => {
   const { chain, keeper, holderA, holderB, vault } = await fixture();
   await chain.call(vault, "recordRealized", [1_000n * USDG], { from: keeper });
 
-  await chain.call(vault, "distribute", [[holderA.hex], [300n * USDG]], { from: keeper });
-  assert.equal(await chain.read(vault, "owed", []), 450n * USDG);
+  await chain.call(vault, "distribute", [[holderA.hex], [100n * USDG]], { from: keeper });
+  assert.equal(await chain.read(vault, "owed", []), 50n * USDG);
 
   await chain.call(vault, "recordRealized", [2_000n * USDG], { from: keeper });
-  // 2000 realized - 500 reserved - 300 paid
-  assert.equal(await chain.read(vault, "owed", []), 1_200n * USDG);
+  // 15% of 2000 accrued, less 100 paid
+  assert.equal(await chain.read(vault, "owed", []), 200n * USDG);
 
-  await chain.call(vault, "distribute", [[holderB.hex], [1_200n * USDG]], { from: keeper });
+  await chain.call(vault, "distribute", [[holderB.hex], [200n * USDG]], { from: keeper });
   assert.equal(await chain.read(vault, "owed", []), 0n);
-  assert.equal(await chain.read(vault, "distributed", []), 1_500n * USDG);
+  assert.equal(await chain.read(vault, "distributed", []), 300n * USDG);
 });
 
-test("the reserve absorbs a pool loss without touching what holders are owed", async () => {
+test("a position loss falls on working capital, not on what holders are owed", async () => {
   const { chain, keeper, vault } = await fixture();
   await chain.call(vault, "recordRealized", [1_000n * USDG], { from: keeper });
   const owedBefore = await chain.read(vault, "owed", []);
 
-  await chain.call(vault, "drawReserve", [200n * USDG, "AMC/USDG band closed below"], { from: keeper });
+  await chain.call(vault, "absorbLoss", [200n * USDG, "ROUTE/USDG band closed below"], { from: keeper });
 
-  assert.equal(await chain.read(vault, "reserved", []), 50n * USDG);
+  assert.equal(await chain.read(vault, "workingCapital", []), 650n * USDG);
   assert.equal(await chain.read(vault, "owed", []), owedBefore, "holders must be untouched");
 });
 
-test("the reserve cannot be drawn below zero", async () => {
+test("working capital cannot be driven below zero", async () => {
   const { chain, keeper, vault } = await fixture();
   await chain.call(vault, "recordRealized", [1_000n * USDG], { from: keeper });
-  const res = await chain.call(vault, "drawReserve", [500n * USDG, "too much"], { from: keeper });
-  assert.equal(res.ok, false);
+  const res = await chain.call(vault, "absorbLoss", [900n * USDG, "too much"], { from: keeper });
+  assert.equal(res.error, "WorkingCapitalExhausted");
+});
+
+test("a loss stops future accrual without clawing back past accrual", async () => {
+  const { chain, keeper, vault } = await fixture();
+  await chain.call(vault, "recordRealized", [1_000n * USDG], { from: keeper });
+  await chain.call(vault, "absorbLoss", [800n * USDG, "drawdown"], { from: keeper });
+
+  // What holders already earned survives the loss...
+  assert.equal(await chain.read(vault, "owed", []), 150n * USDG);
+  // ...but a desk that is not making money records no new profit to split.
+  assert.equal(await chain.read(vault, "workingCapital", []), 50n * USDG);
 });
 
 // --- Distribution -----------------------------------------------------------
@@ -169,15 +180,15 @@ test("distribution pays holders pro-rata and books the total", async () => {
   const { chain, keeper, holderA, holderB, usdg, vault } = await fixture();
   await chain.call(vault, "recordRealized", [1_000n * USDG], { from: keeper });
 
-  // 750 owed, split 2:1
+  // 150 owed, split 2:1
   const res = await chain.call(
-    vault, "distribute", [[holderA.hex, holderB.hex], [500n * USDG, 250n * USDG]],
+    vault, "distribute", [[holderA.hex, holderB.hex], [100n * USDG, 50n * USDG]],
     { from: keeper },
   );
 
   assert.equal(res.ok, true, `distribute reverted: ${res.error}`);
-  assert.equal(await chain.read(usdg, "balanceOf", [holderA.hex]), 500n * USDG);
-  assert.equal(await chain.read(usdg, "balanceOf", [holderB.hex]), 250n * USDG);
+  assert.equal(await chain.read(usdg, "balanceOf", [holderA.hex]), 100n * USDG);
+  assert.equal(await chain.read(usdg, "balanceOf", [holderB.hex]), 50n * USDG);
   assert.equal(await chain.read(vault, "owed", []), 0n);
 });
 
@@ -185,8 +196,8 @@ test("distribution cannot exceed what is owed", async () => {
   const { chain, keeper, holderA, vault } = await fixture();
   await chain.call(vault, "recordRealized", [1_000n * USDG], { from: keeper });
 
-  const res = await chain.call(vault, "distribute", [[holderA.hex], [751n * USDG]], { from: keeper });
-  assert.equal(res.error, "ExceedsOwed", "the reserve must be unreachable by distribution");
+  const res = await chain.call(vault, "distribute", [[holderA.hex], [151n * USDG]], { from: keeper });
+  assert.equal(res.error, "ExceedsOwed", "working capital must be unreachable by distribution");
 });
 
 test("distribution cannot be called by anyone but the keeper", async () => {
@@ -209,7 +220,7 @@ test("mismatched recipient and amount arrays revert", async () => {
 
 test("the rolling cap blocks a payout beyond the window allowance", async () => {
   const { chain, keeper, holderA, vault } = await fixture();
-  await chain.call(vault, "recordRealized", [4_000_000n * USDG], { from: keeper });
+  await chain.call(vault, "recordRealized", [20_000_000n * USDG], { from: keeper });
 
   // Cap is 1,000,000 per 24h.
   const ok = await chain.call(vault, "distribute", [[holderA.hex], [CAP]], { from: keeper });
@@ -222,7 +233,7 @@ test("the rolling cap blocks a payout beyond the window allowance", async () => 
 
 test("the cap refills continuously rather than resetting on a boundary", async () => {
   const { chain, keeper, holderA, usdg, vault } = await fixture();
-  await chain.call(vault, "recordRealized", [4_000_000n * USDG], { from: keeper });
+  await chain.call(vault, "recordRealized", [20_000_000n * USDG], { from: keeper });
   await chain.call(vault, "distribute", [[holderA.hex], [CAP]], { from: keeper });
 
   chain.warp(6 * 60 * 60); // quarter of the window
@@ -289,9 +300,9 @@ test("a reserve draw does not inflate owed when profit is next reported", async 
 
   await chain.call(vault, "recordRealized", [1_000n * USDG], { from: keeper });
   const owedBefore = await chain.read(vault, "owed", []);
-  assert.equal(owedBefore, 750n * USDG);
+  assert.equal(owedBefore, 150n * USDG);
 
-  await chain.call(vault, "drawReserve", [200n * USDG, "band closed below"], { from: keeper });
+  await chain.call(vault, "absorbLoss", [200n * USDG, "band closed below"], { from: keeper });
 
   // The keeper's own books still say lifetime realized profit is 1,000. Its next
   // report is that same cumulative figure. Absorbing a loss must not turn that
