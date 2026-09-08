@@ -48,6 +48,12 @@ export class FixtureAdapter implements DeskAdapter {
         { symbol: "BBBY", instrument: "Bed Bath & Beyond", quantity: 1_940n * 10n ** 18n, decimals: 18, basis: 214_000n, reference: 208_000n, mark: 331_000n },
         { symbol: "NOK", instrument: "Nokia", quantity: 260n * 10n ** 18n, decimals: 18, basis: 4_410_000n, reference: 4_460_000n, mark: 4_452_000n },
       ],
+      bands: [
+        { pool: "0x1a2b3c4d5e6f70819a2b3c4d5e6f7081", symbol: "BBBY", instrument: "Bed Bath & Beyond", quote: "USDG", feeTier: 3000, lower: 396_000n, upper: 444_000n, price: 421_000n, capital: 9_800_000_000n, feesEarned: 412_900_000n, inRange: true, openedAt: new Date(Date.now() - 31 * 3_600_000).toISOString() },
+        { pool: "0x2b3c4d5e6f70819a2b3c4d5e6f708192", symbol: "EXPR", instrument: "Express", quote: "USDG", feeTier: 3000, lower: 1_094_000n, upper: 1_226_000n, price: 1_161_000n, capital: 7_400_000_000n, feesEarned: 268_400_000n, inRange: true, openedAt: new Date(Date.now() - 19 * 3_600_000).toISOString() },
+        { pool: "0x3c4d5e6f70819a2b3c4d5e6f70819a2b", symbol: "AMC", instrument: "AMC Entertainment", quote: "USDG", feeTier: 500, lower: 2_910_000n, upper: 3_210_000n, price: 3_052_000n, capital: 11_200_000_000n, feesEarned: 331_700_000n, inRange: true, openedAt: new Date(Date.now() - 52 * 3_600_000).toISOString() },
+        { pool: "0x4d5e6f70819a2b3c4d5e6f70819a2b3c", symbol: "KOSS", instrument: "Koss Corporation", quote: "USDG", feeTier: 3000, lower: 8_120_000n, upper: 9_040_000n, price: 9_310_000n, capital: 4_600_000_000n, feesEarned: 96_200_000n, inRange: false, openedAt: new Date(Date.now() - 7 * 3_600_000).toISOString() },
+      ],
       dislocations: [
         { pool: "0x0000000000000000000000000000000000000000", symbol: "BBBY", deviation: 0.591, probeYield: 41_200_000n, depth: 1_180_000n, qualifies: true, blockedBy: null },
         { pool: "0x0000000000000000000000000000000000000000", symbol: "AMC", deviation: 0.303, probeYield: 28_900_000n, depth: 402_000n, qualifies: true, blockedBy: null },

@@ -15,16 +15,42 @@
  *      own root would swallow. It is rewritten to a body-scoped attribute the
  *      toggle sets directly.
  *
- * Usage: node scripts/artifact.mjs [outfile]   (runs `next build` first)
+ * Usage: node scripts/artifact.mjs [--route /path] [--out file]
+ *                                   [--link /route=https://…]…
+ *
+ * Runs `next build` first. Routes other than the one being rendered are not in
+ * the file, so their links are rewritten: to a published URL when --link gives
+ * one, and to an inert anchor otherwise.
  */
 
 import { spawn } from "node:child_process";
 import { writeFileSync } from "node:fs";
 
 const PORT = 3123;
-const OUT =
-  process.argv[2] ??
-  "/tmp/claude-0/-home-user-dev/f15182dd-5706-5de7-9e3e-333359592ddf/scratchpad/resident.html";
+const SCRATCH =
+  "/tmp/claude-0/-home-user-dev/f15182dd-5706-5de7-9e3e-333359592ddf/scratchpad";
+
+const args = process.argv.slice(2);
+const flag = (name, fallback) => {
+  const i = args.indexOf(name);
+  return i >= 0 && args[i + 1] ? args[i + 1] : fallback;
+};
+
+const ROUTE = flag("--route", "/");
+const TITLE = flag("--title", ROUTE === "/" ? "Resident" : "Resident Positions");
+const OUT = flag("--out", `${SCRATCH}/${ROUTE === "/" ? "resident" : ROUTE.slice(1)}.html`);
+
+/** Routes that live at a published URL rather than in this file. */
+const LINKS = new Map(
+  args
+    .map((a, i) => (a === "--link" ? args[i + 1] : null))
+    .filter(Boolean)
+    .map((pair) => {
+      const at = pair.indexOf("=");
+      if (at < 0) throw new Error(`--link wants /route=url, got ${pair}`);
+      return [pair.slice(0, at), pair.slice(at + 1)];
+    }),
+);
 
 const run = (cmd, args) =>
   new Promise((resolve, reject) => {
@@ -67,16 +93,23 @@ try {
   const base = `http://127.0.0.1:${PORT}`;
   await waitFor(base);
 
-  const page = await (await fetch(base)).text();
+  const page = await (await fetch(base + ROUTE)).text();
   const { body: rendered, htmlClass } = split(page);
 
   // The RSC flight payload re-encodes the whole page and points at chunk URLs
   // that do not exist once this is a standalone file. It is dead weight here.
-  // Every route but "/" is likewise absent, so internal links become anchors.
-  const body = rendered
-    .replace(/<script[\s\S]*?<\/script>/g, "")
-    .replace(/href="\/method"/g, 'href="#risk"')
-    .replace(/href="\/"/g, 'href="#"');
+  let body = rendered.replace(/<script[\s\S]*?<\/script>/g, "");
+
+  // Rewrite every internal link: this route to a self-anchor, a route with a
+  // published URL to that URL, anything else to an inert anchor. Longest route
+  // first, so /positions is not clobbered by the rule for /.
+  const routes = [...new Set([...LINKS.keys(), ROUTE, "/", "/method", "/positions"])]
+    .sort((a, b) => b.length - a.length);
+  for (const route of routes) {
+    const href =
+      route === ROUTE ? "#" : (LINKS.get(route) ?? (route === "/method" ? "#risk" : "#"));
+    body = body.replaceAll(`href="${route}"`, `href="${href}"`);
+  }
 
   const hrefs = [...page.matchAll(/<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"/g)]
     .map((m) => m[1])
@@ -88,6 +121,17 @@ try {
       hrefs.map(async (h) => (await fetch(base + h)).text()),
     )
   ).join("\n");
+
+  // next/font emits @font-face rules pointing at ../media/*.woff2, which do not
+  // exist standalone. Left in, they define "Chivo" with a src that never loads
+  // and shadow the identically named families the Google Fonts link provides,
+  // so the page renders in the fallback stack. Drop exactly those; the metric-
+  // override "… Fallback" faces are local(Arial) and self-contained, so they
+  // stay.
+  const dropped = [];
+  css = css.replace(/@font-face\{[^{}]*\}/g, (rule) =>
+    rule.includes("url(../media/") ? (dropped.push(rule), "") : rule,
+  );
 
   // See (2) above. Both quoted and unquoted forms, since minifiers drop quotes.
   css = css.replace(
@@ -113,7 +157,7 @@ try {
 
   writeFileSync(
     OUT,
-    `<title>Resident</title>
+    `<title>${TITLE}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;500;600&family=Chivo+Mono&family=Roboto+Mono&display=swap">
@@ -128,7 +172,10 @@ ${script}
 `,
   );
 
-  console.log(`wrote ${OUT} (${(css.length / 1024) | 0}KB css)`);
+  console.log(
+    `wrote ${OUT} from ${ROUTE} (${(css.length / 1024) | 0}KB css, ` +
+      `${dropped.length} unresolvable @font-face rules dropped)`,
+  );
 } finally {
   process.kill(-server.pid);
 }

@@ -15,7 +15,7 @@ export function Payout() {
 
           <div className="mt-4 flex flex-col gap-2">
             <div className="flex items-baseline justify-between gap-4">
-              <span className="type-eyebrow text-text-primary">You</span>
+              <span className="type-eyebrow text-text-primary">Holders</span>
               <span className="text-[20px] leading-none font-medium tabular-nums text-text-primary">
                 15%
               </span>
@@ -25,7 +25,7 @@ export function Payout() {
             </div>
             <div className="flex items-baseline justify-between gap-4">
               <span className="type-eyebrow text-text-secondary">
-                Working capital — back into positions, takes the losses
+                Working capital — redeployed, absorbs losses
               </span>
               <span className="type-eyebrow text-text-secondary tabular-nums">
                 85%

@@ -38,6 +38,35 @@ export type Position = {
   mark: bigint;
 };
 
+/**
+ * An open concentrated-liquidity position.
+ *
+ * Distinct from {@link Position}, which is spot inventory. A band is capital
+ * committed between two prices: it earns fees only while price trades inside
+ * the range, so `inRange` is the difference between a position that is working
+ * and one that is merely open.
+ */
+export type BandPosition = {
+  pool: string;
+  symbol: string;
+  instrument: string;
+  /** Quote asset the band is paired against, e.g. "USDG". */
+  quote: string;
+  /** Pool fee tier in hundredths of a bip: 3000 = 0.30%. */
+  feeTier: number;
+  /** Range bounds and current price, in payout-asset minor units per unit. */
+  lower: bigint;
+  upper: bigint;
+  price: bigint;
+  /** Capital currently committed, in payout-asset minor units. */
+  capital: bigint;
+  /** Fees earned by this position since it was opened. */
+  feesEarned: bigint;
+  /** True while price sits inside [lower, upper] and the band is earning. */
+  inRange: boolean;
+  openedAt: string;
+};
+
 export type Dislocation = {
   pool: string;
   symbol: string;
@@ -78,6 +107,8 @@ export type DeskSnapshot = {
   vault: VaultState;
   ledger: LedgerState;
   positions: Position[];
+  /** Open concentrated-liquidity bands. */
+  bands: BandPosition[];
   dislocations: Dislocation[];
   distributions: Distribution[];
   eligible: EligibleInstrument[];

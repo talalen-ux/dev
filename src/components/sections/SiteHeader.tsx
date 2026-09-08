@@ -13,11 +13,14 @@ export function SiteHeader() {
         </Link>
       </div>
       <div className="flex flex-1 items-center justify-end gap-4 sm:gap-6">
+        <Link href="/positions" className="type-eyebrow text-text-secondary hover:text-text-primary">
+          Positions
+        </Link>
         <Link href="/method" className="type-eyebrow text-text-secondary hover:text-text-primary">
           Method
         </Link>
         <a href="#" className="type-eyebrow text-brand-primary">
-          Buy $RES
+          Get $RES
         </a>
         <ThemeToggle />
       </div>

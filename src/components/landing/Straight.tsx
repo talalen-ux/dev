@@ -1,16 +1,16 @@
 import Link from "next/link";
 
-import { FAQS } from "@/content/landing";
+import { FAQ_HEADING, FAQS } from "@/content/landing";
 
 /**
- * Straight answers. Open by default — these are the questions someone should
- * read before buying, so they are not hidden behind a click.
+ * Disclosures, open by default — these are what someone should read before
+ * buying, so none of them sits behind a click.
  */
 export function Straight() {
   return (
     <section id="risk" className="border-t border-rule py-xxl">
       <h2 className="type-h2 text-[28px] text-balance text-text-primary sm:text-[36px]">
-        Straight answers
+        {FAQ_HEADING}
       </h2>
 
       <div className="mt-12 flex flex-col">
@@ -32,7 +32,7 @@ export function Straight() {
       </div>
 
       <p className="type-body-sm mt-10 text-text-secondary">
-        Everything above is spelled out in full, with the numbers, in{" "}
+        Every parameter above is stated in full, with its value, in{" "}
         <Link href="/method" className="text-brand-primary underline underline-offset-4">
           the method
         </Link>

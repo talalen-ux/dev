@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { HERO, HERO_STATS } from "@/content/landing";
 
-/** One claim, one paragraph, three numbers. */
+/** One definitional claim, one paragraph, three figures. */
 export function Hero() {
   return (
     <section className="border-t-8 border-brand-fill pt-14 pb-xxl">
@@ -30,10 +30,10 @@ export function Hero() {
           href="#"
           className="type-eyebrow bg-brand-fill px-6 py-4 text-on-brand transition-opacity hover:opacity-85"
         >
-          Buy $RES
+          {HERO.cta}
         </a>
         <Link href="/method" className="type-eyebrow text-text-secondary underline underline-offset-4 hover:text-text-primary">
-          Read how it actually works
+          {HERO.secondary}
         </Link>
       </div>
     </section>

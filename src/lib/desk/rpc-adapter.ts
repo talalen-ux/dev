@@ -101,8 +101,12 @@ export class RpcAdapter implements DeskAdapter {
         cash: toBigInt(cash),
         rateLimitRemaining: toBigInt(rateLimitRemaining),
       },
-      // Keeper working state, not contract state.
+      // Keeper working state, not contract state. Open bands in particular
+      // need the position manager walked and per-position fee growth
+      // accumulated, which is the indexer integration in INTEGRATIONS.md; an
+      // empty list here renders as "no open positions", never as invented ones.
       positions: [],
+      bands: [],
       dislocations: [],
       distributions: [],
       eligible: [],

@@ -1,11 +1,11 @@
-import { STEPS } from "@/content/landing";
+import { STEPS, STEPS_HEADING } from "@/content/landing";
 
 /** Three steps. It is a sequence, so it is numbered. */
 export function Steps() {
   return (
     <section id="how" className="border-t border-rule py-xxl">
       <h2 className="type-h2 max-w-[560px] text-[28px] text-balance text-text-primary sm:text-[36px]">
-        Thin pools break. It gets paid to be there when they do.
+        {STEPS_HEADING}
       </h2>
 
       <ol className="mt-16 grid grid-cols-1 gap-px bg-rule md:grid-cols-3">

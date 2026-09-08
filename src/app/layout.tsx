@@ -23,7 +23,7 @@ const robotoMono = Roboto_Mono({
 export const metadata: Metadata = {
   title: "Resident — The resident market maker for tokenized equities",
   description:
-    "Systematic liquidity provision against reference-price dislocations in tokenized equities. An autonomous market-making desk on Robinhood Chain paying 15% of realized profit to holders every 15 minutes.",
+    "A liquidity protocol for tokenized equities on Robinhood Chain. Trading fees on $RES capitalize the protocol's concentrated liquidity positions; 15% of realized profit is distributed to holders every 15 minutes.",
 };
 
 export default function RootLayout({
