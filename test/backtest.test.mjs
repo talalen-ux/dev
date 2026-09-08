@@ -234,12 +234,14 @@ test("synthetic history is deterministic and contains the spikes it claims", asy
   assert.equal(source.isSynthetic, true);
 });
 
-// --- Validation against observed operator data ------------------------------
-// Figures read from a live position dashboard on Robinhood Chain. This is the
-// only check here against a real pool rather than a constructed one, so it is
-// the one that says the fee model is not merely self-consistent.
+// --- Validation against live position data ----------------------------------
+// Figures read from concentrated-liquidity positions running live on Robinhood
+// Chain. These are the only checks here against real pools rather than
+// constructed ones, so they are the ones that say the fee model is not merely
+// self-consistent. The positions are identified by their measurements rather
+// than their pairs; what matters is the share, the flow and the fee tier.
 
-test("the fee model reproduces an observed LUCKY/USDG position", () => {
+test("the fee model reproduces an observed high-share position", () => {
   // Reported: 5% fee tier, $85.8k volume over 24h, 89.1% share, $3,750 fees.
   const observed = { volume24h: 85_800, feePips: 50_000, share: 0.891, fees24h: 3_750 };
 
@@ -250,7 +252,7 @@ test("the fee model reproduces an observed LUCKY/USDG position", () => {
 });
 
 test("the share model reproduces the observed position sizes", () => {
-  // LUCKY: $5,049 in the pool at 89.1% share implies ~$617 of other liquidity.
+  // $5,049 in the pool at 89.1% share implies ~$617 of other liquidity.
   const positionValue = 5_049;
   const reportedShare = 0.891;
   const impliedOther = positionValue / reportedShare - positionValue;
@@ -261,7 +263,7 @@ test("the share model reproduces the observed position sizes", () => {
 });
 
 test("an observed position's mark loss is the order the band math predicts", () => {
-  // LUCKY reported −$942 on $6,029 put in, about −15.6%, while the pool sat
+  // Reported −$942 on $6,029 put in, about −15.6%, while the pool sat
   // +3.5% off its reference. A ±5% band cannot lose 15% on a 3.5% move, so the
   // reported mark must include drift beyond the current price — which is why
   // the backtest tracks realised loss across re-centres, not just the open one.
@@ -274,7 +276,7 @@ test("an observed position's mark loss is the order the band math predicts", () 
 });
 
 test("the naive fee formula is an upper bound, and the data says by how much", () => {
-  // ROUTE/USDG as reported: 2% fee, $1.25M/h flow, 13.3% share, $481.33/h earned.
+  // As reported: 2% fee, $1.25M/h flow, 13.3% share, $481.33/h earned.
   const naive = 1_250_000 * 0.02 * 0.133;
   const observed = 481.33;
   const capture = observed / naive;
@@ -282,12 +284,12 @@ test("the naive fee formula is an upper bound, and the data says by how much", (
   assert.ok(naive > observed, "the naive figure must be the upper bound");
   assert.ok(
     capture > 0.1 && capture < 0.2,
-    `ROUTE captured ${(capture * 100).toFixed(1)}% of the naive estimate`,
+    `captured ${(capture * 100).toFixed(1)}% of the naive estimate`,
   );
 
-  // LUCKY, at 89.1% share, captured almost all of it — capture falls with share.
-  const luckyNaive = 85_800 * 0.05 * 0.891;
-  assert.ok(3_750 / luckyNaive > 0.9, "a dominant share captures nearly the full estimate");
+  // The 89.1%-share position captured almost all of it — capture falls with share.
+  const dominantShareNaive = 85_800 * 0.05 * 0.891;
+  assert.ok(3_750 / dominantShareNaive > 0.9, "a dominant share captures nearly the full estimate");
 });
 
 test("captureEfficiency scales fee income and defaults to the upper bound", () => {

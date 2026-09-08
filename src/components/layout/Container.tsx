@@ -1,9 +1,9 @@
 import { cn } from "@/lib/cn";
 
 /**
- * Figma "Container" (4361:21): 1248px of content centred in the 1440px frame,
- * i.e. 96px gutters at full width. Every section rule spans this width, not the
- * viewport, so the container wraps the whole page rather than each section.
+ * The content column: 1248px centred in a 1440px frame, i.e. 96px gutters at
+ * full width. Every section rule spans this width, not the viewport, so the
+ * container wraps the whole page rather than each section.
  */
 export function Container({
   children,

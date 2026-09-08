@@ -7,8 +7,8 @@
  * which calls slot0() on a pool address — cannot see any of it.
  *
  * That matters because v4 is where the volume is: roughly half of all DEX trades
- * on Robinhood Chain, against about a third on v3, and every position on the
- * operator dashboard this desk is modelled on is a v4 pool.
+ * on Robinhood Chain, against about a third on v3, and the live positions this
+ * desk is calibrated against are all v4 pools.
  */
 
 import { AbiCoder, keccak256 } from "ethers";

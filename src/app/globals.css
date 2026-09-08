@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   Design tokens for Resident. The scale and type ramp began as the PinLink
-   Figma system (yBLU5kTeT7WHKFRLVbd7Ov) and kept its structure; the palette is
+   Design tokens for Resident. The spacing scale and type ramp keep the
+   structure of the design system the site was built from; the palette is
    Resident's own.
    --------------------------------------------------------------------------- */
 @theme {

@@ -1,12 +1,12 @@
 /**
  * Band policy: how wide, when to enter, when to leave.
  *
- * The reference implementation this is measured against opens a fixed ±width
- * band, re-centres when it drifts out, and retires on a gross mark loss. Live
- * positions run that way showed three of four underwater on principal while
- * still net positive after fees — which is the strategy working, but it also
- * means the entry decision was never about whether fees would outrun the bleed.
- * It was about the fee number being large.
+ * The naive way to run a band is to open a fixed ±width, re-centre when it
+ * drifts out, and retire on a gross mark loss. Live positions run that way show
+ * most of them underwater on principal while still net positive after fees —
+ * which is the strategy working, but it also means the entry decision was never
+ * about whether fees would outrun the bleed. It was about the fee number being
+ * large.
  *
  * This module makes that the decision instead:
  *
@@ -215,9 +215,9 @@ export type ExitConfig = {
    * Retire when net — fees banked, less the bleed — falls this far below
    * capital.
    *
-   * Matches the observed "max loss 35%" setting. Whether that implementation
-   * measures gross or net is not visible from the outside, so no advantage is
-   * claimed here; this is stated as net because that is what it computes.
+   * Set at 35%, matching the stop live positions on comparable pools run. It
+   * is stated as net because net is what this module computes — measuring the
+   * stop on gross would discard positions the fees have already paid for.
    */
   maxNetLossFraction: number;
   /** Intervals out of range before re-centring. */

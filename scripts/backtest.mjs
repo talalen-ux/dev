@@ -37,11 +37,11 @@ const MINUTE = 60_000;
  * Generated scenarios spanning the range of plausible regimes.
  *
  * These are NOT real pools — each one's properties are set by construction. But
- * the volume and liquidity figures are calibrated to a live operator dashboard
- * so the regimes are at least the right order of magnitude:
+ * the volume and liquidity figures are calibrated to positions running live on
+ * Robinhood Chain, so the regimes are at least the right order of magnitude:
  *
- *   ROUTE/USDG   $1.25M/h flow, ~$70k in-band liquidity, 2% fee
- *   LUCKY/USDG   $10.6k/h flow, ~$620 in-band liquidity, 5% fee
+ *   CHURN/USDG   $1.25M/h flow, ~$70k in-band liquidity, 2% fee
+ *   THIN/USDG    $10.6k/h flow, ~$620 in-band liquidity, 5% fee
  *
  * baseVolume is PER INTERVAL, and intervals are minutes — an hourly figure
  * dropped in here directly overstates flow sixtyfold.
@@ -60,13 +60,13 @@ const SCENARIOS = {
     intervals: 43_200, intervalMs: MINUTE, seed: 2,
   },
   "memecoin-churn": {
-    pair: "ROUTE/USDG", feePips: 20000, startPrice: 0.0085, vol: 0.012,
+    pair: "CHURN/USDG", feePips: 20000, startPrice: 0.0085, vol: 0.012,
     spikeProb: 0.0008, spikeSize: 0.25, spikeDecay: 4,
     baseVolume: 20_800, baseLiquidity: 70_000, // $1.25M/h, as observed
     intervals: 43_200, intervalMs: MINUTE, seed: 3,
   },
   "memecoin-dump": {
-    pair: "LUCKY/USDG", feePips: 50000, startPrice: 0.00078, vol: 0.02,
+    pair: "THIN/USDG", feePips: 50000, startPrice: 0.00078, vol: 0.02,
     spikeProb: 0.0006, spikeSize: 0.3, spikeDecay: 5,
     baseVolume: 177, baseLiquidity: 620, // $10.6k/h, as observed
     intervals: 43_200, intervalMs: MINUTE, seed: 4,

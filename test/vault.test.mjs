@@ -150,7 +150,7 @@ test("a position loss falls on working capital, not on what holders are owed", a
   await chain.call(vault, "recordRealized", [1_000n * USDG], { from: keeper });
   const owedBefore = await chain.read(vault, "owed", []);
 
-  await chain.call(vault, "absorbLoss", [200n * USDG, "ROUTE/USDG band closed below"], { from: keeper });
+  await chain.call(vault, "absorbLoss", [200n * USDG, "band closed below cost"], { from: keeper });
 
   assert.equal(await chain.read(vault, "workingCapital", []), 650n * USDG);
   assert.equal(await chain.read(vault, "owed", []), owedBefore, "holders must be untouched");

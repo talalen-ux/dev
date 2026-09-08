@@ -1,9 +1,8 @@
 /**
  * The desk's decision functions, evaluated against pool state.
  *
- * Each corresponds to a numbered step of the published method, and each is
- * computed through the pool's own swap math rather than from displayed price —
- * which is the whole point of the fillability test.
+ * Each is computed through the pool's own swap math rather than from displayed
+ * price — which is the whole point of the fillability test.
  */
 
 import { spotPrice, swapExactIn, type PoolState } from "./v3.ts";

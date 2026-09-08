@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Resident
 
-## Getting Started
+A liquidity protocol for tokenized equities on Robinhood Chain.
 
-First, run the development server:
+Resident deploys capital as concentrated liquidity in thin, high-turnover
+tokenized equity pools. Trading fees on the `$RES` token capitalize the
+positions. 15% of realized profit is distributed to holders every 15 minutes;
+the remaining 85% is retained as working capital.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+**Nothing here has been deployed.** The contracts carry a test suite and have
+not been audited, no vault exists on mainnet, and the positions dashboard runs
+on illustrative figures until one does.
+
+## What is in here
+
+```
+contracts/      ResidentVault — custody, the profit ledger, distributions
+src/lib/sim/    the strategy: pool selection, band width, entry, exits
+src/lib/desk/   the adapter the dashboards read through
+src/app/        the site: /, /docs, /positions, and the operator views at /desk
+test/           122 tests, run on a local EVM and against the sim math
+scripts/        backtest, simulate, verify-chain, artifact
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## The strategy, briefly
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+A concentrated position earns fees only while price trades inside its range.
+Narrower means a larger share of flow and more time out of range. The protocol's
+job is choosing pools where both thin depth and real volume hold, sizing the
+band against the pool's own volatility, and opening only when expected fee
+income beats expected divergence loss — not when the headline fee number is
+large.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Every operating threshold is documented at `/docs` and quoted from the code it
+describes: `DEFAULT_ALERT_CONFIG` and `DEFAULT_WIDTH_CONFIG` /
+`DEFAULT_ENTRY_CONFIG` / `DEFAULT_EXIT_CONFIG` in `src/lib/sim/`, and
+`HOLDER_BPS` in `contracts/ResidentVault.sol`.
 
-## Learn More
+## Running it
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install
+npm run dev        # the site at http://localhost:3000
+npm test           # contract tests and the sim suite
+npm run lint
+npm run backtest   # constructed scenarios through the band policy
+npm run simulate   # the desk's gates against a simulated pool
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The dashboards run on fixtures until a vault is configured, and say so on every
+screen. To point them at a real deployment, set `NEXT_PUBLIC_RPC_URL` and
+`NEXT_PUBLIC_VAULT_ADDRESS` — see `.env.example`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Before this touches money
 
-## Deploy on Vercel
+- `npm run verify:chain` from a machine with RPC access. The chain constants in
+  `src/lib/chain.ts` were transcribed from official sources and have never been
+  checked against the chain itself.
+- An audit. The contracts are tested, not reviewed.
+- The indexer named in `INTEGRATIONS.md`. Pool selection needs per-pool volume
+  windows and LP event history, which an RPC alone cannot serve fast enough.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Custody
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The vault owner — the deployer wallet — can withdraw any asset at any time, with
+no timelock and no governance process. The keeper cannot: it is restricted to
+allowlisted venues and to distributions. This is the protocol's principal risk,
+it is not mitigated by the contract, and it means Resident is not non-custodial
+and should not be described as such.
+
+See `DEPLOYMENT.md` for the deployment and fork-test procedure, and
+`INTEGRATIONS.md` for what is still missing.

@@ -102,10 +102,10 @@ export type FeeEstimate = { m5: number; h1: number; h6: number; h24: number };
  * prices the band does not cover, and in concentrated liquidity only the active
  * tick earns.
  *
- * Measured against an operator dashboard: a ROUTE/USDG position at 13.3% share
- * of $1.25M/h at a 2% fee earned $481/h against a naive $3,325/h — 14.5% of the
- * bound. A LUCKY/USDG position at 89.1% share came in near the bound, because
- * at that share nearly all flow does cross the band. Capture falls as share
+ * Measured against live positions on comparable pools: one at 13.3% share of
+ * $1.25M/h at a 2% fee earned $481/h against a naive $3,325/h — 14.5% of the
+ * bound. Another at 89.1% share came in near the bound, because at that share
+ * nearly all flow does cross the band. Capture falls as share
  * falls, so this figure is worst on exactly the deep pools it looks best on.
  *
  * `captureEfficiency` scales it. It defaults to 1 so the board shows the bound

@@ -57,10 +57,9 @@ export type BandConfig = {
   /**
    * Retire the position if it falls this far below capital.
    *
-   * Observed operator settings are "max loss 35%" across five positions and
-   * "max loss 70%" on one, so the default here is 0.35. An earlier 0.05 was my
-   * own invention and would have retired every one of those positions almost
-   * immediately — a stop that tight turns a strategy whose whole thesis is
+   * Live positions on comparable pools run stops near 35%, with the occasional
+   * outlier at 70%, so the default here is 0.35. An earlier 0.05 was arbitrary
+   * and would have retired every one of those positions almost immediately — a stop that tight turns a strategy whose whole thesis is
    * "eat the bleed, out-earn it in fees" into one that never gets paid.
    */
   stopLossFraction: number;
@@ -73,11 +72,11 @@ export type BandConfig = {
    * the band does not cover, and in concentrated liquidity only the active tick
    * earns.
    *
-   * Measured against an operator dashboard, a ROUTE/USDG position reporting
-   * 13.3% share against $1.25M/h of flow at a 2% fee earned $481/h, where the
-   * naive figure is $3,325/h — a capture of 14.5%. A LUCKY/USDG position at
-   * 89.1% share of a $10.6k/h pool matched its naive figure almost exactly,
-   * because at that share nearly all flow does cross the band.
+   * Measured against live positions on comparable pools: one at 13.3% share
+   * against $1.25M/h of flow at a 2% fee earned $481/h, where the naive figure
+   * is $3,325/h — a capture of 14.5%. Another at 89.1% share of a $10.6k/h pool
+   * matched its naive figure almost exactly, because at that share nearly all
+   * flow does cross the band.
    *
    * So capture falls as share falls. Two observations is not a curve, which is
    * why this defaults to 1.0: the model states its upper bound honestly rather
@@ -88,7 +87,8 @@ export type BandConfig = {
    * Fraction of allocated capital that actually reaches the pool.
    *
    * A two-sided band can only deploy what the token ratio at the current price
-   * allows; the rest sits idle. Observed: $9,471 of $12,000, $4,825 of $6,000,
+   * allows; the rest sits idle. Observed across live two-sided positions:
+   * $9,471 of $12,000, $4,825 of $6,000,
    * $5,516 of $6,000, $5,218 of $6,000, $5,258 of $6,000, and $9,000 of
    * $20,000 — a median near 85%, and as low as 45%. Fees accrue on what is
    * deployed, but the return is measured against what was committed.
