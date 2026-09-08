@@ -1,9 +1,8 @@
 import Link from "next/link";
 
 import { Logo } from "@/components/ui/Logo";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
-/** Logo lockup left; utility links and the theme toggle right. */
+/** Logo lockup left; utility links right. */
 export function SiteHeader() {
   return (
     <header className="flex flex-wrap items-center gap-x-12 gap-y-4 py-10">
@@ -22,7 +21,6 @@ export function SiteHeader() {
         <a href="#" className="type-eyebrow text-brand-primary">
           Get $RES
         </a>
-        <ThemeToggle />
       </div>
     </header>
   );

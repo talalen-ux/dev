@@ -55,9 +55,9 @@ export default async function PositionsPage() {
           container's padding at each breakpoint, letting the fill reach the
           container edge while the text stays on the page grid.
 
-          brand-fill is lime in both themes, so everything inside takes the
-          constant on-brand ink rather than the theme's own text color — in
-          dark mode text-text-primary is white, which on lime is unreadable. */}
+          Everything inside takes on-brand rather than text-primary: they are
+          the same ink today, but on-brand is the one that means "legible on
+          lime", so a future palette change cannot quietly break it. */}
       <section className="-mx-6 bg-brand-fill px-6 pt-16 pb-xl text-on-brand md:-mx-12 md:px-12 min-[1440px]:-mx-24 min-[1440px]:px-24">
         <h1 className="max-w-[900px] text-[40px] leading-[1.02] font-medium tracking-[-0.02em] text-balance sm:text-[56px]">
           Positions

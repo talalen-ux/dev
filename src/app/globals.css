@@ -11,17 +11,16 @@
      Lime is split across two tokens on purpose. True lime (#C1FF72) measures
      1.18:1 against white, so it cannot carry text or hairlines — it is the
      fill colour, used where solid area makes it read. brand-primary is the
-     deepened lime that carries every accent glyph and rule at 5.1:1. In the
-     dark theme the two converge, because lime is legible on near-black. */
+     deepened lime that carries every accent glyph and rule at 5.1:1. */
   --color-bg-primary: #ffffff;
   --color-bg-secondary: #f1f3ee;
   --color-text-primary: #1a1c17;
   --color-text-secondary: #6b7065;
   --color-brand-primary: #4c7a1e;
   --color-brand-fill: #c1ff72;
-  /* Ink for text sitting ON brand-fill. Constant across themes, because the
-     lime surface is constant: the theme's own text colour would go white on
-     lime in dark mode and drop to 1.18:1. */
+  /* Ink for text sitting ON brand-fill. Equal to text-primary today, and kept
+     as its own token because it is a different requirement: text on the lime
+     surface must stay dark whatever the page ground becomes. */
   --color-on-brand: #1a1c17;
 
   --color-rule: rgba(26, 28, 23, 0.15);
@@ -37,19 +36,6 @@
   --font-sans: var(--font-chivo), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-chivo-mono), ui-monospace, monospace;
   --font-mono-alt: var(--font-roboto-mono), ui-monospace, monospace;
-}
-
-/* The alternate near-black theme, reached from the header toggle. Here true
-   lime reaches 16:1 on the ground, so both brand tokens resolve to it. */
-:root[data-theme="dark"] {
-  --color-bg-primary: #121212;
-  --color-bg-secondary: #1e211c;
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #9a9a94;
-  --color-brand-primary: #c1ff72;
-  --color-brand-fill: #c1ff72;
-  --color-rule: rgba(255, 255, 255, 0.2);
-  --color-text-muted: rgba(255, 255, 255, 0.7);
 }
 
 html {

@@ -3,17 +3,16 @@
  * as a Claude Artifact.
  *
  * The artifact host wraps whatever it is given in its own <!doctype>/<head>/
- * <body>, so this cannot ship an <html> or <body> tag. Two things follow, and
- * both are why this is a script rather than a copy-paste:
+ * <body>, so this cannot ship an <html> or <body> tag. That is why this is a
+ * script rather than a copy-paste: next/font puts its --font-* variables on a
+ * class it expects to sit on <html>, and there is no <html> here, so a tiny
+ * inline script moves those classes onto document.documentElement at load.
+ * Without it --font-sans resolves to nothing and the whole page silently falls
+ * back to the system stack.
  *
- *   1. next/font puts its --font-* variables on a class it expects to sit on
- *      <html>. There is no <html> here, so a tiny inline script moves those
- *      classes onto document.documentElement at load. Without it --font-sans
- *      resolves to nothing and the whole page silently falls back to the
- *      system stack.
- *   2. The dark palette is keyed on :root[data-theme="dark"], which the host's
- *      own root would swallow. It is rewritten to a body-scoped attribute the
- *      toggle sets directly.
+ * The site is light-only. Its own body rule paints background and colour
+ * explicitly, so the page keeps its ground in a viewer whose theme is dark
+ * rather than inheriting the host's.
  *
  * Usage: node scripts/artifact.mjs [--route /path] [--out file]
  *                                   [--link /route=https://…]…
@@ -133,26 +132,9 @@ try {
     rule.includes("url(../media/") ? (dropped.push(rule), "") : rule,
   );
 
-  // See (2) above. Both quoted and unquoted forms, since minifiers drop quotes.
-  css = css.replace(
-    /:root\[data-theme=("dark"|dark)\]/g,
-    "body[data-resident-theme=dark]",
-  );
-
   const script = `(function () {
   ${JSON.stringify(htmlClass)}.split(" ").filter(Boolean)
     .forEach(function (c) { document.documentElement.classList.add(c); });
-  document.body.dataset.residentTheme = "light";
-  var toggle = document.querySelector('[role="switch"]');
-  if (toggle) {
-    var knob = toggle.querySelector("span");
-    toggle.addEventListener("click", function () {
-      var dark = toggle.getAttribute("aria-checked") !== "true";
-      toggle.setAttribute("aria-checked", String(dark));
-      document.body.dataset.residentTheme = dark ? "dark" : "light";
-      if (knob) knob.style.left = dark ? "19px" : "3px";
-    });
-  }
 })();`;
 
   writeFileSync(

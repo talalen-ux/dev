@@ -35,7 +35,6 @@ export default function RootLayout({
     // substitution fails if the variable is only defined further down the tree.
     <html
       lang="en"
-      data-theme="light"
       className={`${chivo.variable} ${chivoMono.variable} ${robotoMono.variable}`}
     >
       <body>{children}</body>
