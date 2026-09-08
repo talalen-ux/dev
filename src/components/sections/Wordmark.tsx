@@ -1,5 +1,5 @@
 import { Mark } from "@/components/ui/Logo";
-import { TAGLINE } from "@/content/resident";
+import { TAGLINE } from "@/content/docs";
 
 /** Oversized lockup closing the page. */
 export function Wordmark() {

@@ -1,4 +1,4 @@
-import { LP_BANDS, LP_EXPOSURE } from "@/content/resident";
+import { LP_BANDS, LP_EXPOSURE } from "@/content/docs";
 
 /**
  * The three band shapes. They are alternatives, not stages, so they sit

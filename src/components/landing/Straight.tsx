@@ -33,7 +33,7 @@ export function Straight() {
 
       <p className="type-body-sm mt-10 text-text-secondary">
         Every parameter above is stated in full, with its value, in{" "}
-        <Link href="/method" className="text-brand-primary underline underline-offset-4">
+        <Link href="/docs" className="text-brand-primary underline underline-offset-4">
           the method
         </Link>
         .

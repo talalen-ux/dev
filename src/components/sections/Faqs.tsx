@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { FAQS } from "@/content/resident";
+import { FAQS } from "@/content/docs";
 
 /** Every question here is answered by the method above. */
 export function Faqs() {

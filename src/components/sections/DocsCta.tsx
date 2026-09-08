@@ -1,4 +1,4 @@
-import { DOCS_BLURB } from "@/content/resident";
+import { DOCS_BLURB } from "@/content/docs";
 
 /** Documentation prompt. */
 export function DocsCta() {

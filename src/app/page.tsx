@@ -9,7 +9,7 @@ import { SiteHeader } from "@/components/sections/SiteHeader";
 
 /**
  * Four sections: what it does, how it works, how you get paid, and the
- * questions worth asking first. Everything longer lives at /method.
+ * questions worth asking first. Everything longer lives at /docs.
  */
 export default function Home() {
   return (

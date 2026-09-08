@@ -1,5 +1,5 @@
 /**
- * Landing page copy. Four sections; the full method lives at /method.
+ * Landing page copy. Four sections; the full method lives at /docs.
  *
  * Register: a liquidity protocol describing itself plainly — mechanism first,
  * precise numbers, no hype. What that register must not do here is borrow the
@@ -20,7 +20,7 @@ export const HERO = {
   headline: "A liquidity protocol for tokenized equities.",
   sub: "Resident provides concentrated liquidity in tokenized equity markets on Robinhood Chain. Trading fees on $RES capitalize the protocol's positions. 15% of realized profit is distributed to holders every 15 minutes; the remaining 85% is redeployed as working capital.",
   cta: "Get $RES",
-  secondary: "Read the method",
+  secondary: "Read the docs",
 };
 
 export const HERO_STATS = [

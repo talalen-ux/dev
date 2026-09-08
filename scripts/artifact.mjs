@@ -36,7 +36,8 @@ const flag = (name, fallback) => {
 };
 
 const ROUTE = flag("--route", "/");
-const TITLE = flag("--title", ROUTE === "/" ? "Resident" : "Resident Positions");
+const TITLES = { "/": "Resident", "/positions": "Resident Positions", "/docs": "Resident Docs" };
+const TITLE = flag("--title", TITLES[ROUTE] ?? "Resident");
 const OUT = flag("--out", `${SCRATCH}/${ROUTE === "/" ? "resident" : ROUTE.slice(1)}.html`);
 
 /** Routes that live at a published URL rather than in this file. */
@@ -102,11 +103,11 @@ try {
   // Rewrite every internal link: this route to a self-anchor, a route with a
   // published URL to that URL, anything else to an inert anchor. Longest route
   // first, so /positions is not clobbered by the rule for /.
-  const routes = [...new Set([...LINKS.keys(), ROUTE, "/", "/method", "/positions"])]
+  const routes = [...new Set([...LINKS.keys(), ROUTE, "/", "/docs", "/positions"])]
     .sort((a, b) => b.length - a.length);
   for (const route of routes) {
     const href =
-      route === ROUTE ? "#" : (LINKS.get(route) ?? (route === "/method" ? "#risk" : "#"));
+      route === ROUTE ? "#" : (LINKS.get(route) ?? (route === "/docs" ? "#risk" : "#"));
     body = body.replaceAll(`href="${route}"`, `href="${href}"`);
   }
 

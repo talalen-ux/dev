@@ -1,4 +1,4 @@
-import { CHAIN, QUOTE, TOKEN } from "@/content/resident";
+import { CHAIN, QUOTE, TOKEN } from "@/content/docs";
 
 /** Token, chain and quote asset — the desk's coordinates, stated up front. */
 export function ChainStrip() {

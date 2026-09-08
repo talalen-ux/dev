@@ -13,19 +13,19 @@ import { Pillars } from "@/components/sections/Pillars";
 import { Signals } from "@/components/sections/Signals";
 import { SiteFooter } from "@/components/sections/SiteFooter";
 import { SiteHeader } from "@/components/sections/SiteHeader";
-import { HERO_HEADLINE, HERO_NOTE, HERO_STANDFIRST } from "@/content/resident";
+import { HERO_HEADLINE, HERO_NOTE, HERO_STANDFIRST } from "@/content/docs";
 
 export const metadata = {
-  title: "The method — Resident",
+  title: "Docs — Resident",
   description:
-    "The full method: reference pricing, the fillability test, the liquidity survey, inventory construction, execution, the LP desk, profit accounting, custody and every operating parameter.",
+    "How Resident selects pools, sets band width from realised volatility, tests entry on net rather than headline yield, manages open positions, and accounts for profit — with every operating parameter and the custody limits stated.",
 };
 
 /**
  * The long form. The landing page is deliberately short, so every claim it
  * makes is substantiated here instead of being cut.
  */
-export default function MethodPage() {
+export default function DocsPage() {
   return (
     <Container>
       <SiteHeader />

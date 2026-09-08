@@ -1,5 +1,5 @@
 import { Formula } from "@/components/ui/Formula";
-import { PAYOUT_STEPS, SNAPSHOT_NOTE } from "@/content/resident";
+import { PAYOUT_STEPS, SNAPSHOT_NOTE } from "@/content/docs";
 
 /** Profit accounting: a ledger identity, stated as one. */
 export function Payouts() {

@@ -1,5 +1,5 @@
 import { PillarIcon } from "@/components/ui/PillarIcon";
-import { PILLARS } from "@/content/resident";
+import { PILLARS } from "@/content/docs";
 
 /** The three commitments the rest of the page substantiates. */
 export function Pillars() {

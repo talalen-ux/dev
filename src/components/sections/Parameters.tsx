@@ -1,4 +1,4 @@
-import { CADENCES, PARAMETERS, PARAMETERS_NOTE } from "@/content/resident";
+import { CADENCES, PARAMETERS, PARAMETERS_NOTE } from "@/content/docs";
 
 /** The operating configuration, published so behaviour is predictable. */
 export function Parameters() {

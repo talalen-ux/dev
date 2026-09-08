@@ -1,4 +1,4 @@
-import { INVARIANTS } from "@/content/resident";
+import { INVARIANTS } from "@/content/docs";
 
 /**
  * Custody properties, stated as held. The last row is the one that constrains

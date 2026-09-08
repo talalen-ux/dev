@@ -32,7 +32,7 @@ export function Hero() {
         >
           {HERO.cta}
         </a>
-        <Link href="/method" className="type-eyebrow text-text-secondary underline underline-offset-4 hover:text-text-primary">
+        <Link href="/docs" className="type-eyebrow text-text-secondary underline underline-offset-4 hover:text-text-primary">
           {HERO.secondary}
         </Link>
       </div>

@@ -1,4 +1,4 @@
-import { HERO_HEADLINE, HERO_NOTE, HERO_STANDFIRST } from "@/content/resident";
+import { HERO_HEADLINE, HERO_NOTE, HERO_STANDFIRST } from "@/content/docs";
 
 /** The thesis, stated once, at full size. */
 export function Hero() {

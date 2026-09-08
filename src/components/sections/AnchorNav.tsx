@@ -1,4 +1,4 @@
-import { NAV_LINKS } from "@/content/resident";
+import { NAV_LINKS } from "@/content/docs";
 
 /** In-page anchors, in the order the method is argued. */
 export function AnchorNav() {

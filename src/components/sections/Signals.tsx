@@ -1,4 +1,4 @@
-import { SIGNALS } from "@/content/resident";
+import { SIGNALS } from "@/content/docs";
 
 /** What the desk watches but does not automatically act on. */
 export function Signals() {

@@ -1,5 +1,5 @@
 import { Formula } from "@/components/ui/Formula";
-import { METHOD } from "@/content/resident";
+import { METHOD } from "@/content/docs";
 
 /** The method, argued in order. Each step keeps its own anchor. */
 export function Method() {
@@ -37,17 +37,6 @@ export function Method() {
                   expr={section.formula.expr}
                   caption={section.formula.caption}
                 />
-              ) : null}
-
-              {"sub" in section && section.sub ? (
-                <div className="flex flex-col gap-3 border-t border-rule pt-8">
-                  <h3 className="type-eyebrow text-text-primary">
-                    {section.sub.title}
-                  </h3>
-                  <p className="type-body text-text-secondary">
-                    {section.sub.body}
-                  </p>
-                </div>
               ) : null}
             </div>
           </div>

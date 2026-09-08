@@ -15,8 +15,8 @@ export function SiteHeader() {
         <Link href="/positions" className="type-eyebrow text-text-secondary hover:text-text-primary">
           Positions
         </Link>
-        <Link href="/method" className="type-eyebrow text-text-secondary hover:text-text-primary">
-          Method
+        <Link href="/docs" className="type-eyebrow text-text-secondary hover:text-text-primary">
+          Docs
         </Link>
         <a href="#" className="type-eyebrow text-brand-primary">
           Get $RES

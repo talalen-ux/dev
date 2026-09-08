@@ -1,4 +1,4 @@
-import { CYCLE } from "@/content/resident";
+import { CYCLE } from "@/content/docs";
 
 /**
  * The capital cycle. This is a genuine sequence — fee flow only becomes a payout
@@ -11,7 +11,7 @@ export function Cycle() {
       <div className="flex items-center gap-6 pb-16">
         <span className="type-eyebrow text-brand-primary">./</span>
         <h2 className="type-eyebrow text-text-primary">
-          How the desk turns fee flow into a payout
+          How fee flow becomes a distribution
         </h2>
       </div>
 
