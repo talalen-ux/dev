@@ -141,7 +141,65 @@ Everything the keeper touches must also go on the vault's allowlist after
 deploy — `setVenue(address,bool)`, owner only. The keeper cannot reach anything
 that is not on that list.
 
-## 3. An indexer — the one integration that is not just an address
+## 3. Tracking the tokens
+
+Two data paths, deliberately separate, because they answer different questions
+and have different tolerances for being wrong.
+
+### Discovery, history and analytics → Bitquery
+
+Bitquery already indexes Robinhood Chain end to end — decoded events, token
+transfers, DEX trades and pool liquidity — behind one GraphQL endpoint, with any
+query convertible to a WebSocket stream. It also carries dedicated Pons and
+pools.trade launchpad APIs. That covers everything the board and the tracker
+need without building an indexer:
+
+| What | Where it comes from |
+| --- | --- |
+| New pools | v4 `Initialize` on PoolManager; v3 `PoolCreated` on the factory |
+| New launches | Pons v2 factory `TokenLaunched` / `PoolGraduated`; pools.trade |
+| Volume windows, 24h peak | `Swap` events, bucketed |
+| Pool age | first `Initialize` / `PoolCreated` block |
+| LP adds and removes, by wallet | v4 `ModifyLiquidity`; v3 `Mint` / `Burn` / `Collect` |
+| Realised volatility | the price series, from the same swaps |
+
+Set `RESIDENT_INDEXER_URL` and an API key.
+
+### Sizing and execution → direct RPC, never the index
+
+Anything that decides an order size or goes into a transaction reads the chain
+directly through `StateView`, not Bitquery. Robinhood Chain produces a block
+roughly every 100ms, so even a one-second indexer lag is about ten blocks — long
+enough for a fill to land at a price the index has not seen. The index says
+*where to look*; the chain says *what to send*.
+
+### Uniswap v4 is the venue that matters, and it is not v3
+
+Roughly half of DEX volume on the chain is v4, about a third v3, and every
+position on the dashboard this desk is modelled on is v4.
+
+v4 is a singleton. There is no per-pool contract: pools live inside PoolManager
+addressed by `PoolId = keccak256(abi.encode(PoolKey))`, and state is read via
+`StateView`. `src/lib/sim/v4.ts` does that and returns the same `PoolState` the
+swap engine, the gates and the backtest already consume, so nothing downstream
+changes. The v3 reader in `pools.ts` is kept for v3 pools and cannot see v4 at
+all.
+
+Two things that bite here, both now covered by tests:
+
+- **Currencies must be sorted.** v4 does not sort them for you, and an unsorted
+  key hashes to a pool that does not exist — reads return zeros rather than an
+  error. `poolId()` throws instead.
+- **ABI sign-extends.** `int24` ticks and `int128` liquidityNet arrive
+  sign-extended across a full 256-bit word. Decoding at the native width turns
+  tick −201900 into an enormous positive number, which is every pool priced
+  below 1.0 — i.e. most memecoin pairs.
+
+Also worth knowing: the fee charged is the `lpFee` from `slot0`, not the fee in
+the pool key. A hook can override it, which is the same reason the opportunity
+board gates on hook-free pools.
+
+## 4. If you would rather not depend on Bitquery
 
 The opportunity board and the smart-LP tracker need data an RPC cannot serve
 fast enough:
@@ -153,17 +211,27 @@ fast enough:
   scoring.
 - **Swap events** with in-range liquidity, to credit fees to positions.
 
-Options, roughly in order of effort:
+Self-hosting is a day or two of work and removes the third-party dependency on
+the one input the desk cannot run without.
 
-1. **A Uniswap v3 subgraph on Robinhood Chain**, if one is deployed. Cheapest
-   by far — set `RESIDENT_INDEXER_URL` and I write the queries.
-2. **Self-hosted Graph node or Ponder**, indexing the factory and pools. A day
-   or two of work, and it is what a desk running continuously will want anyway.
-3. **Log polling straight off the RPC** into a local store. Works, and it is
-   slow and fragile across reorgs. I would only do this to get moving.
+The v4 singleton makes this much easier than it would have been on v3: there is
+one contract to watch rather than one per pool. A Ponder or Graph node indexing
+`PoolManager` (`Initialize`, `Swap`, `ModifyLiquidity`), the v3 factory, and the
+Pons v2 factory covers the whole table above.
 
-Tell me which and I will write the adapter behind `PoolsSource`, which is the
-one interface the board depends on. Nothing in the UI changes.
+Log polling straight off the RPC also works and is what I would use to get
+moving, but at 100ms blocks it is a lot of logs and it is fragile across reorgs.
+
+Either way the seam is the same: `PoolsSource` for the board, `HistorySource`
+for the backtest. Supply a fetch function and nothing else changes.
+
+## 5. Numbers that do not agree yet
+
+The registry in `src/lib/tokens.ts` holds 194 tokens from the contracts page,
+but the chain is reported to carry 450+ stock tokens and tokenized ETFs. Either
+the page was a subset, or it has moved on since. Worth reconciling before the
+canonical check is relied on, since a real token missing from the registry is
+refused as an impostor — the safe direction to fail, but still wrong.
 
 ## 4. Reference prices
 
