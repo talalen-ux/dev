@@ -22,6 +22,9 @@ export function SiteHeader() {
         <Link href="/docs" className="type-eyebrow inline-flex min-h-11 items-center text-text-secondary hover:text-text-primary">
           Docs
         </Link>
+        <Link href="/whitepaper" className="type-eyebrow inline-flex min-h-11 items-center text-text-secondary hover:text-text-primary">
+          Whitepaper
+        </Link>
         <TokenCta className="type-eyebrow inline-flex min-h-11 items-center text-brand-primary" />
       </div>
     </header>
