@@ -848,6 +848,11 @@ const deps = {
 /** The last tick's summary, served to the dashboard. Replaced every tick. */
 let lastReport = { positions: [], board: [], idleCapital: 0, at: 0 };
 
+/** Consecutive ticks that produced no intents, and how many before saying so. */
+let stalledTicks = 0;
+const STALL_TICKS = 60;
+
+
 /**
  * The operator's way in.
  *
@@ -1018,10 +1023,38 @@ async function runOnce() {
 
   const ranked = report.scan?.ranked ?? [];
   const eligible = ranked.filter((r) => r.eligible);
+  const book = report.book;
   console.log(
     `${when}  ${ranked.length} pools, ${eligible.length} eligible, ` +
-      `${report.intents.length} intents`,
+      `${report.intents.length} intents  ·  ` +
+      `book ${book.held} open, ${book.committed.toFixed(0)} committed, ` +
+      `${book.idle.toFixed(0)} idle`,
   );
+
+  // A desk that does nothing looks exactly like a desk with nothing to do.
+  // These two lines are the difference, and not having them is why this ran
+  // flat for a week without anyone noticing.
+  if (book.held > book.observed) {
+    console.log(
+      `          ! ${book.held - book.observed} of ${book.held} positions could not be ` +
+        "marked: their pools are off the board, so they can neither earn nor be " +
+        "retired, and their capital stays committed",
+    );
+  }
+  stalledTicks = report.intents.length === 0 ? stalledTicks + 1 : 0;
+  if (stalledTicks > 0 && stalledTicks % STALL_TICKS === 0) {
+    console.log(
+      `          ! no intents for ${stalledTicks} ticks. ` +
+        `${eligible.length} pools are eligible and ${book.idle.toFixed(0)} is idle` +
+        (book.idle < DEFAULT_TICK.decide.reserve + DEFAULT_TICK.decide.minOpen
+          ? `, which is under the ${DEFAULT_TICK.decide.reserve} reserve plus the ` +
+            `${DEFAULT_TICK.decide.minOpen} floor — the desk cannot open anything`
+          : " — check the refusals below"),
+    );
+    for (const { subject, reason } of report.passed.slice(0, 6)) {
+      console.log(`            ${subject}: ${reason}`);
+    }
+  }
   for (const r of eligible.slice(0, 5)) {
     console.log(
       `          ${r.pool.name.padEnd(16)} ${(r.netApr * 100).toFixed(1)}% APR  ${r.reason}`,

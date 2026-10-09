@@ -91,6 +91,19 @@ export type TickReport = {
   passed: { subject: string; reason: string }[];
   /** Set when the tick refused to act, with the reason. Never silent. */
   halted: string | null;
+  /**
+   * What the desk is actually holding, so a tick that does nothing still says
+   * what state it did nothing in.
+   *
+   * `held` counts the journal's open positions and `observed` counts the ones
+   * that could be marked this tick. They are normally equal. When they are not,
+   * the difference is a position whose pool has fallen off the board: it cannot
+   * be marked, so the retire rule skips it as unobserved, while its capital
+   * still counts against what is deployable. That is how a desk with money and
+   * a full board sits still indefinitely, and it is invisible unless both
+   * numbers are reported together.
+   */
+  book: { held: number; observed: number; committed: number; idle: number };
 };
 
 export type TickConfig = {
@@ -130,6 +143,7 @@ export async function tick(
     results: [],
     passed: [],
     halted: null,
+    book: { held: 0, observed: 0, committed: 0, idle: 0 },
   };
 
   let state: KeeperState;
@@ -187,6 +201,13 @@ export async function tick(
     calibration,
   );
   report.scan = scanned;
+
+  report.book = {
+    held: state.positions.length,
+    observed: observation.positions.length,
+    committed: state.positions.reduce((sum, p) => sum + p.capital, 0),
+    idle: observation.idleCapital,
+  };
 
   // Mark every open position before deciding. The marks are what make "net"
   // a measured figure later rather than a claim, and they must be written even

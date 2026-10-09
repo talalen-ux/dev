@@ -334,6 +334,38 @@ test("a tick opens a position and the journal shows it afterwards", async () => 
   assert.equal(state.positions.length, 1);
 });
 
+/**
+ * The failure that ran the live desk flat for a week.
+ *
+ * A held pool stops trading, so it leaves the board; the position can no longer
+ * be marked, so the retire rule skips it as unobserved; its capital still
+ * counts as committed, so nothing is deployable. The desk then sits still with
+ * a full board of eligible pools and says nothing about why. The book figures
+ * are what make that visible on the tick it starts, rather than seven days
+ * later.
+ */
+test("a position that cannot be marked is reported, not silently stuck", async () => {
+  const journal = new MemoryJournal();
+  await tick(fakeDeps(), journal, DEFAULT_TICK, () => 1_000);
+
+  const report = await tick(
+    fakeDeps({
+      observe: async () => ({
+        pools: [], positions: [], current: null, idleCapital: 0,
+        inventory: [],
+        unbookedProfit: 0, unbookedLoss: 0, owed: 0, bridges: {},
+        vault: { owner: "0xowner", keeper: "0xkeeper" },
+      }),
+    }),
+    journal, DEFAULT_TICK, () => 2_000,
+  );
+
+  assert.equal(report.book.held, 1, "the journal still holds the position");
+  assert.equal(report.book.observed, 0, "but nothing could mark it");
+  assert.ok(report.book.committed > 0, "and its capital is still committed");
+  assert.equal(report.intents.length, 0, "so the desk can do nothing with it");
+});
+
 test("an unresolved call stops the rest of the tick", async () => {
   const journal = new MemoryJournal();
   const report = await tick(

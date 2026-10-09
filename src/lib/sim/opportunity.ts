@@ -122,11 +122,26 @@ export const DEFAULT_ALERT_CONFIG: AlertConfig = {
  * Both sides count: token1 held below spot down to the lower bound, and token0
  * held above spot up to the upper bound, marked at spot. A band competes with
  * all of it for flow in either direction.
+ *
+ * QUOTE-DENOMINATED MEANS THE POOL'S OWN QUOTE, NOT TOKEN1.
+ *
+ * Uniswap orders a pool's tokens by address, so the quote lands on token0 in
+ * about half the USDG pools on this chain. This used to value both sides in
+ * token1 regardless, and every caller then multiplied the result by USD-per-
+ * QUOTE — so a `USDG/AAPL` pool reported its competing liquidity as a count of
+ * AAPL shares read as dollars, understating it by the share price. The desk
+ * saw almost no competition, computed a share near 1, and priced fee income
+ * hundreds of times too high on exactly the pools it then opened into.
+ *
+ * The same mistake was found and fixed on the volume path; this is the half
+ * that was missed. See test/opportunity.test.mjs, which pins one real pool
+ * measured both ways round.
  */
 export function liquidityInBand(pool: PoolState, halfWidth: number): number {
   if (pool.liquidity <= 0n) return 0;
 
   const price = spotPrice(pool);
+  if (!(price > 0)) return 0;
   const sqrtP = pool.sqrtPriceX96;
   const sqrtLower = BigInt(Math.floor(Number(sqrtP) * Math.sqrt(1 - halfWidth)));
   const sqrtUpper = BigInt(Math.floor(Number(sqrtP) * Math.sqrt(1 + halfWidth)));
@@ -134,9 +149,12 @@ export function liquidityInBand(pool: PoolState, halfWidth: number): number {
   const token0 = amount0Delta(sqrtP, sqrtUpper, pool.liquidity);
   const token1 = amount1Delta(sqrtLower, sqrtP, pool.liquidity);
 
-  const value0 = (Number(token0) / 10 ** pool.token0.decimals) * price;
-  const value1 = Number(token1) / 10 ** pool.token1.decimals;
-  return value0 + value1;
+  const amount0 = Number(token0) / 10 ** pool.token0.decimals;
+  const amount1 = Number(token1) / 10 ** pool.token1.decimals;
+
+  // `price` is token1 per token0, so the conversion into the quote runs one
+  // way or the other depending on which side the quote landed on.
+  return pool.stockIsToken1 ? amount0 + amount1 / price : amount0 * price + amount1;
 }
 
 /** Share of in-range flow a band of `size` would take against `inBand` liquidity. */

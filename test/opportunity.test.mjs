@@ -86,6 +86,49 @@ test("a wider band captures more of the book", () => {
   assert.ok(liquidityInBand(p, 0.1) > liquidityInBand(p, 0.05));
 });
 
+/**
+ * The orientation bug that priced the live board.
+ *
+ * Uniswap orders tokens by address, so the quote lands on token0 in about half
+ * the USDG pools on this chain. Measuring both sides in token1 regardless made
+ * a `USDG/AMC` pool report its competing liquidity as a count of AMC shares,
+ * which every caller then read as dollars — understating it by the share price,
+ * so the desk saw no competition and priced its own fee income hundreds of
+ * times too high.
+ *
+ * Equal decimals on both sides, so the two pools are exact mirrors and any
+ * difference is the orientation rather than rounding.
+ */
+test("in-band liquidity is the same book whichever side the quote landed on", () => {
+  const liquidity = 20_000n * 10n ** 18n;
+  const quoteOnToken1 = buildPool({
+    price: 5,
+    liquidity,
+    fee: 3000,
+    token0: { symbol: "AMC", decimals: 18 },
+    token1: { symbol: "USDG", decimals: 18 },
+  });
+  const quoteOnToken0 = {
+    ...buildPool({
+      price: 1 / 5,
+      liquidity,
+      fee: 3000,
+      token0: { symbol: "USDG", decimals: 18 },
+      token1: { symbol: "AMC", decimals: 18 },
+    }),
+    stockIsToken1: true,
+  };
+
+  const onToken1 = liquidityInBand(quoteOnToken1, 0.05);
+  const onToken0 = liquidityInBand(quoteOnToken0, 0.05);
+
+  assert.ok(onToken1 > 0, "the fixture has liquidity in band");
+  assert.ok(
+    Math.abs(onToken1 / onToken0 - 1) < 1e-6,
+    `the same book must measure the same both ways round, got ${onToken1} and ${onToken0}`,
+  );
+});
+
 test("a thinner pool gives the band a bigger share and a bigger estimate", () => {
   const thin = evaluatePool(obs({ poolOpts: { liquidity: 20_000n * 10n ** 12n } }));
   const deep = evaluatePool(obs({ poolOpts: { liquidity: 400_000n * 10n ** 12n } }));
