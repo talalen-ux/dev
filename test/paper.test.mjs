@@ -10,6 +10,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { accruedFrom, markPaper, paperReturn } from "../src/lib/keeper/paper.ts";
+import { shouldRetire } from "../src/lib/keeper/sweep.ts";
 import { positionValue, liquidityForCapital } from "../src/lib/sim/band.ts";
 
 const position = {
@@ -131,4 +132,86 @@ test("age and sweep gaps are counted in intervals", () => {
   });
   assert.equal(mark.ageIntervals, 60);
   assert.equal(mark.intervalsSinceSweep, 30);
+});
+
+/**
+ * The quiet-pool trap.
+ *
+ * A held pool that stops trading used to vanish from the board, which made its
+ * position unmarkable and therefore unmanageable: the retire rule skips what it
+ * cannot see, so the capital sat committed indefinitely. Held pools are now
+ * read whatever their activity, which fixes the stranding and introduces a
+ * second way to get this wrong — marking the quiet interval as a net rate of
+ * zero would hand the retire rule ten readings under its floor and close a
+ * sound position after ten quiet minutes.
+ *
+ * So an unmeasured interval marks the principal leg, which is real, and
+ * declines to invent a rate.
+ */
+test("an interval with no market data marks the price but contributes no rate", () => {
+  const earning = [0.004, 0.003, 0.005];
+  const series = { marks: earning.map((rate) => ({ rate })), sweeps: [] };
+
+  const quiet = markPaper({
+    ...base,
+    price: 1.02,
+    volume: 0,
+    liquidity: 0,
+    volatility: 0,
+    series,
+    measured: false,
+  });
+
+  assert.equal(quiet.measured, false);
+  assert.equal(quiet.feeEstimate, 0, "a pool nobody traded earned nothing");
+
+  // The principal leg is untouched by the pool being quiet.
+  const live = markPaper({ ...base, price: 1.02, series });
+  assert.equal(quiet.value, live.value, "price and value are still real");
+  assert.equal(quiet.heldValue, live.heldValue);
+
+  // And the retire run is exactly what it was before the quiet interval.
+  assert.deepEqual(quiet.recentRates, earning);
+  assert.equal(
+    live.recentRates.length,
+    earning.length + 1,
+    "a measured interval does add its reading",
+  );
+});
+
+test("a measured interval is the default, so an observer that says nothing is unchanged", () => {
+  assert.equal(markPaper(base).measured, true);
+  assert.equal(markPaper({ ...base, measured: true }).measured, true);
+});
+
+test("ten quiet intervals do not retire a position that was earning", async () => {
+  // Three good readings, then the pool goes quiet for longer than the retire
+  // rule's whole run length. The journal records a mark each interval; the ones
+  // with no market data carry no rate, exactly as loop.ts writes them.
+  const marks = [{ rate: 0.004 }, { rate: 0.003 }, { rate: 0.005 }];
+
+  for (let i = 0; i < 10; i++) {
+    const series = { marks: [...marks], sweeps: [] };
+    const quiet = markPaper({
+      ...base, price: 1.01, volume: 0, liquidity: 0, volatility: 0,
+      series, measured: false,
+    });
+    marks.push({
+      price: quiet.price,
+      rate: quiet.measured === false ? undefined : quiet.currentRate,
+    });
+  }
+
+  const series = { marks, sweeps: [] };
+  const final = markPaper({
+    ...base, price: 1.01, volume: 0, liquidity: 0, volatility: 0,
+    series, measured: false,
+  });
+
+  assert.deepEqual(final.recentRates, [0.004, 0.003, 0.005], "only the real readings");
+  assert.equal(
+    shouldRetire(final.recentRates).retire,
+    false,
+    "a pool nobody traded is an absence of evidence, not a failing position",
+  );
 });

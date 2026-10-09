@@ -97,6 +97,20 @@ export type PositionObservation = {
   unrealised: number;
   /** The last observations of currentRate, oldest first, for the retire run. */
   recentRates: number[];
+  /**
+   * False when the pool produced no market data this interval, so there was
+   * nothing to price fee income or bleed from.
+   *
+   * The position is still marked: its price comes from pool state, so the
+   * principal leg is as real as ever and every rule can still see the position.
+   * What is withheld is a RATE. A pool nobody traded is an absence of evidence,
+   * not evidence that the position is failing, and recording a zero would hand
+   * the retire rule ten straight readings under its floor and close a sound
+   * position after ten quiet minutes.
+   *
+   * Absent means measured, so an observer that never sets it behaves as before.
+   */
+  measured?: boolean;
   /** Bounds a re-centred position would use, from the current price. */
   freshLower: number;
   freshUpper: number;

@@ -283,6 +283,22 @@ export class RpcPoolsSource implements PoolsSource {
   private readonly discoverySeconds: number;
   /** Pools that traded in the window, before maxPools trimmed the tail. */
   lastActive = 0;
+  /**
+   * Pool ids to read whatever their activity, because the desk holds a position
+   * in them.
+   *
+   * maxPools trims the board to the busiest pools, which is right for ranking
+   * and wrong for a pool the desk is already in: a position that cannot be
+   * measured cannot be re-centred, rotated or retired either, so its capital is
+   * stranded for as long as forty other pools are busier than it. Held pools
+   * are read first and trimmed last.
+   */
+  private pinned = new Set<string>();
+
+  /** Called each tick with the ids of pools the desk currently holds. */
+  pin(ids: Iterable<string>): void {
+    this.pinned = new Set(ids);
+  }
 
   constructor(
     rpcUrl: string,
@@ -402,6 +418,14 @@ export class RpcPoolsSource implements PoolsSource {
       .slice(0, this.maxPools)
       .map(([id]) => id);
 
+    // Held pools join the read regardless of where they placed, and regardless
+    // of whether they traded at all. A pool that produced no logs yields an
+    // observation with zero volume, which is the truth about it and is what
+    // lets the desk see a position it would otherwise be blind to.
+    for (const id of this.pinned) {
+      if (watchedById.has(id) && !active.includes(id)) active.push(id);
+    }
+
     // Stage two: how much, over the full window, for those pools only.
     const reader = rpcReader(this.rpcUrl);
     const observations: PoolObservation[] = [];
@@ -417,7 +441,9 @@ export class RpcPoolsSource implements PoolsSource {
         this.maxBlockSpan,
         this.pauseMs,
       );
-      if (!logs.length) continue;
+      // No trades in the window is a reason to leave a pool off the board, but
+      // not a reason to stop looking at one the desk is in.
+      if (!logs.length && !this.pinned.has(id)) continue;
 
       const pool = await readV4Pool(reader, watched.key, watched.token0, watched.token1);
 

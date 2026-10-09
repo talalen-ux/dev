@@ -53,6 +53,12 @@ export type PaperInputs = {
   series: PositionSeries | undefined;
   now: number;
   intervalMs: number;
+  /**
+   * False when the pool produced no swaps this interval, so `volume`,
+   * `liquidity` and `volatility` are absences rather than measurements.
+   * See PositionObservation.measured.
+   */
+  measured?: boolean;
 };
 
 /**
@@ -95,9 +101,10 @@ export function markPaper(inputs: PaperInputs): PositionObservation & {
     ? Math.min(price - position.lower, position.upper - price) / price
     : 0;
 
+  const measured = inputs.measured !== false;
   let feeIncome = 0;
   let rate = 0;
-  if (inRange && halfWidth > 0 && value > 0) {
+  if (measured && inRange && halfWidth > 0 && value > 0) {
     const share = concentratedShare(value, halfWidth, inputs.liquidity);
     feeIncome =
       inputs.volume * (inputs.feePips / 1_000_000) * share * inputs.captureEfficiency;
@@ -114,7 +121,9 @@ export function markPaper(inputs: PaperInputs): PositionObservation & {
     price,
     unrealised: value - position.capital,
     heldValue: held,
-    recentRates: [...ratesFrom(inputs.series), rate],
+    // An unmeasured interval contributes no reading to the retire run.
+    recentRates: measured ? [...ratesFrom(inputs.series), rate] : ratesFrom(inputs.series),
+    measured,
     freshLower: price * (1 - inputs.freshHalfWidth),
     freshUpper: price * (1 + inputs.freshHalfWidth),
     ageIntervals: Math.floor((inputs.now - position.openedAt) / interval),

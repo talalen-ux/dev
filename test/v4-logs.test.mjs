@@ -387,3 +387,57 @@ test("neither side a known quote keeps a consistent orientation", () => {
 });
 
 const { quoteSide: quoteSideOf } = await import("../src/lib/desk/rpc-pools-source.ts");
+
+/**
+ * Held pools are read whatever their activity.
+ *
+ * maxPools trims the board to the busiest pools, and a pool with no swaps in
+ * the window is dropped outright. Both are right for ranking and wrong for a
+ * pool the desk is already in: an unread pool cannot be marked, an unmarked
+ * position cannot be re-centred, rotated or retired, and its capital is
+ * stranded until the pool gets busy again. That is what left this desk holding
+ * everything it had and doing nothing with it for a week.
+ */
+async function observePinned(stub, pinned, opts = {}) {
+  const original = globalThis.fetch;
+  globalThis.fetch = stub;
+  try {
+    const source = new RpcPoolsSource(
+      "http://stub",
+      [{ key: KEY, token0: STOCK, token1: USDG }],
+      { maxBlockSpan: 1_000_000, ageSearchBlocks: 50_000, ...opts },
+    );
+    source.pin(pinned);
+    return await source.observe();
+  } finally {
+    globalThis.fetch = original;
+  }
+}
+
+test("a pool the desk holds is read even after it stops trading", async () => {
+  const head = 100_000;
+  const quiet = () => stubFetch({ head, swaps: [] });
+
+  assert.deepEqual(
+    await observeWith(quiet()),
+    [],
+    "an untraded pool is not board material",
+  );
+
+  const [obs] = await observePinned(quiet(), [poolId(KEY)]);
+  assert.ok(obs, "but one the desk is IN is read anyway");
+  assert.equal(obs.volume.h1, 0, "and reports the truth about its volume");
+  assert.equal(obs.prices.length, 0, "with no price samples, so it cannot rank");
+});
+
+test("a held pool outranked by busier ones is still read in full", async () => {
+  const head = 100_000;
+  // One swap, but maxPools is zero: nothing survives the activity cut.
+  const stub = () => stubFetch({ head, swaps: [{ block: head - 50, amount1: 3_000_000n }] });
+
+  assert.deepEqual(await observeWith(stub(), { maxPools: 0 }), [], "trimmed off the board");
+
+  const [obs] = await observePinned(stub(), [poolId(KEY)], { maxPools: 0 });
+  assert.ok(obs, "pinned past the trim");
+  assert.equal(obs.volume.h1, 3, "and measured properly, not as a quiet pool");
+});

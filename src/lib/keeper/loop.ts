@@ -221,7 +221,10 @@ export async function tick(
       value: position.value,
       feesUnclaimed: position.feesUnclaimed,
       price: position.price,
-      rate: position.currentRate,
+      // An interval the pool produced no data for records its price and value
+      // — both real — but no rate. ratesFrom skips marks without one, so an
+      // absence never becomes a reading in the retire run.
+      rate: position.measured === false ? undefined : position.currentRate,
       feeEstimate: position.feeEstimate,
       heldValue: (position as { heldValue?: number }).heldValue,
     });

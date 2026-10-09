@@ -105,6 +105,12 @@ export type ObserveInputs = {
   series: PositionSeries | undefined;
   now: number;
   intervalMs: number;
+  /**
+   * False when the pool produced no swaps this interval, so `volume`,
+   * `liquidity` and `volatility` are absences rather than measurements.
+   * See PositionObservation.measured.
+   */
+  measured?: boolean;
 };
 
 /**
@@ -129,6 +135,7 @@ export function observePosition(inputs: ObserveInputs): PositionObservation {
   const lower = priceAtTick(read.tickLower, decimals0, decimals1);
   const upper = priceAtTick(read.tickUpper, decimals0, decimals1);
 
+  const measured = inputs.measured !== false;
   const { rate, feeIncome } = rateAndFees({
     price,
     lower,
@@ -144,19 +151,21 @@ export function observePosition(inputs: ObserveInputs): PositionObservation {
   const interval = Math.max(1, inputs.intervalMs);
   return {
     positionId: inputs.position.id,
-    currentRate: rate,
+    currentRate: measured ? rate : 0,
     // What the model says this interval earns in fees, before the bleed. The
     // capture calibration compares the sum of these against what a sweep
     // actually returned, which is the only way the assumed 0.5 is ever
     // replaced by a measurement.
-    feeEstimate: feeIncome,
+    feeEstimate: measured ? feeIncome : 0,
     feesUnclaimed,
     value,
     price,
     // Cost basis is what was committed, and fees banked out of the position are
     // not part of it: they were income the moment they were swept.
     unrealised: value - inputs.position.capital,
-    recentRates: [...ratesFrom(inputs.series), rate],
+    // An unmeasured interval contributes no reading to the retire run.
+    recentRates: measured ? [...ratesFrom(inputs.series), rate] : ratesFrom(inputs.series),
+    measured,
     freshLower: price * (1 - inputs.freshHalfWidth),
     freshUpper: price * (1 + inputs.freshHalfWidth),
     ageIntervals: Math.floor((inputs.now - inputs.position.openedAt) / interval),

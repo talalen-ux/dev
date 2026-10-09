@@ -71,6 +71,7 @@ import {
 } from "../src/lib/desk/extra-tokens.ts";
 import { realisedVolatility } from "../src/lib/sim/strategy.ts";
 import { liquidityInBand } from "../src/lib/sim/opportunity.ts";
+import { spotPrice } from "../src/lib/sim/v3.ts";
 
 const arg = (name, fallback) => {
   const found = process.argv.find((a) => a.startsWith(`--${name}=`));
@@ -257,6 +258,59 @@ if (scannedTo === null) {
 }
 
 const watched = watchable(raw, EXTRA.registry);
+
+/**
+ * Pool name to its id, so a held position can be pinned into the next read.
+ *
+ * Positions record their pool by the name the scanner ranks it under, and two
+ * fee tiers of the same pair share that name. The first match is taken, which
+ * is the same assumption the board itself makes when it keys by name; making
+ * position identity precise is a wider change than this one.
+ */
+const idByName = new Map();
+for (const w of watched) {
+  const key = `${w.token0.symbol}/${w.token1.symbol}`;
+  if (!idByName.has(key)) idByName.set(key, poolIdOf(w.key));
+}
+
+/**
+ * How to mark one position this tick.
+ *
+ * The board answers this for a rankable pool and correctly drops the rest: one
+ * with too little price history to measure is not one to open into. Marking is
+ * a different question. The position exists whether or not its pool is
+ * rankable, and a position that cannot be marked cannot be re-centred, rotated
+ * or retired either — so its capital is stranded until the pool comes back,
+ * which is how this desk sat still from 2 October with a full board.
+ *
+ * Held pools are pinned into the read for exactly this, so an observation is
+ * present even when the board entry is not. When it is not, the price still
+ * comes from pool state and is as real as ever; what is withheld is a rate.
+ */
+function marketFor(poolName, byPool, observed) {
+  const o = observed.get(poolName);
+  if (!o) return null;
+  const board = byPool.get(poolName);
+  return board
+    ? {
+        state: o.pool,
+        price: board.prices.at(-1) ?? 0,
+        volume: board.volume,
+        liquidity: board.liquidity,
+        volatility: board.volatility,
+        feePips: board.feePips,
+        measured: true,
+      }
+    : {
+        state: o.pool,
+        price: spotPrice(o.pool),
+        volume: 0,
+        liquidity: 0,
+        volatility: 0,
+        feePips: o.pool.fee,
+        measured: false,
+      };
+}
 console.log(`  watching  ${watched.length} of ${raw.length} pools the token set allows`);
 
 const source = new RpcPoolsSource(RPC, watched, {
@@ -505,10 +559,21 @@ const deps = {
         vault: VAULT,
       })
     : async () => ({ found: null }),
-  observe: async () => {
+  observe: async (state) => {
+    // Before reading: tell the source which pools the desk is in, so a held
+    // pool is never dropped for being quieter than forty others.
+    source.pin(
+      (state?.positions ?? [])
+        .map((position) => idByName.get(position.pool))
+        .filter((id) => id !== undefined),
+    );
+
     const observations = await source.observe();
     const { pools, dropped } = toScannedPools(observations);
     lastDropped = dropped;
+    const observed = new Map(
+      observations.map((o) => [`${o.pool.token0.symbol}/${o.pool.token1.symbol}`, o]),
+    );
 
     // Without a vault there is nothing to read a balance or a position from,
     // and inventing either would put the decision engine to work on fiction.
@@ -540,24 +605,25 @@ const deps = {
 
       const positions = [];
       for (const position of state.positions) {
-        const board = byPool.get(position.pool);
-        if (!board) continue;
+        const market = marketFor(position.pool, byPool, observed);
+        if (!market) continue;
         const entry = series.get(position.id);
         positions.push(
           markPaper({
             position,
-            price: board.prices.at(-1) ?? 0,
+            price: market.price,
             // The price the position was opened at, from its first mark. Held
             // nowhere else: the registry stores bounds, not the price they
             // were centred on.
-            openPrice: entry?.marks[0]?.price ?? board.prices.at(-1) ?? 0,
-            volume: board.volume,
-            liquidity: board.liquidity,
-            volatility: board.volatility,
-            feePips: board.feePips,
+            openPrice: entry?.marks[0]?.price ?? market.price,
+            volume: market.volume,
+            liquidity: market.liquidity,
+            volatility: market.volatility,
+            feePips: market.feePips,
+            measured: market.measured,
             captureEfficiency: DEFAULT_TICK.decide.scan.capture.unmeasured,
             feesAccrued: accruedFrom(entry),
-            freshHalfWidth: bandWidth(board.volatility),
+            freshHalfWidth: bandWidth(market.volatility),
             series: entry,
             now: Date.now(),
             intervalMs: intervalSeconds * 1000,
@@ -586,9 +652,6 @@ const deps = {
 
     const call = (to, data) => rpc("eth_call", [{ to, data }, "latest"]);
     const byPool = new Map(pools.map((p) => [p.name, p]));
-    const observed = new Map(
-      observations.map((o) => [`${o.pool.token0.symbol}/${o.pool.token1.symbol}`, o]),
-    );
 
     const [roles, ledger, records] = await Promise.all([
       readVaultRoles(call, VAULT),
@@ -608,9 +671,8 @@ const deps = {
 
     const positions = [];
     for (const position of state.positions) {
-      const board = byPool.get(position.pool);
-      const obs = observed.get(position.pool);
-      if (!board || !obs) continue;
+      const market = marketFor(position.pool, byPool, observed);
+      if (!market) continue;
       try {
         const read = await readPosition(
           {
@@ -628,20 +690,20 @@ const deps = {
           },
           position.handle,
         );
-        const price = board.prices.at(-1) ?? 0;
         positions.push(
           observePosition({
             position,
             read,
-            price,
-            decimals0: obs.pool.token0.decimals,
-            decimals1: obs.pool.token1.decimals,
-            quoteIsToken1: obs.pool.stockIsToken1 !== true,
-            volume: board.volume,
-            liquidity: board.liquidity,
-            volatility: board.volatility,
+            price: market.price,
+            decimals0: market.state.token0.decimals,
+            decimals1: market.state.token1.decimals,
+            quoteIsToken1: market.state.stockIsToken1 !== true,
+            volume: market.volume,
+            liquidity: market.liquidity,
+            volatility: market.volatility,
             captureEfficiency: DEFAULT_TICK.decide.scan.capture.unmeasured,
-            freshHalfWidth: bandWidth(board.volatility),
+            freshHalfWidth: bandWidth(market.volatility),
+            measured: market.measured,
             series: series.get(position.id),
             now: Date.now(),
             intervalMs: intervalSeconds * 1000,
