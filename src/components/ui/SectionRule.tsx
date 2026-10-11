@@ -17,14 +17,27 @@ import { cn } from "@/lib/cn";
 export function SectionRule({
   className,
   delay = 0,
+  inFlow = false,
 }: {
   className?: string;
   delay?: number;
+  /**
+   * Make the rule its own element in the document flow.
+   *
+   * The rule is absolutely positioned by default, because at /docs it IS the
+   * top edge of the section it sits inside and those sections are `relative`.
+   * A rule used as a bare sibling BETWEEN sections has no positioned ancestor,
+   * so it silently lands at the top of the document — along with every other
+   * rule on the page, stacked on each other over the masthead. That is not a
+   * subtle failure and it shipped on two pages before anyone looked at the top
+   * of one. Pass this whenever the rule is not inside the thing it underlines.
+   */
+  inFlow?: boolean;
 }) {
   return (
     <div
       aria-hidden
-      className={cn("rule-eat", className)}
+      className={cn("rule-eat", inFlow && "relative", className)}
       style={{ "--rule-delay": `${delay}s` } as React.CSSProperties}
     >
       <span className="rule-eat__line" />

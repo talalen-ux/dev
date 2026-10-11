@@ -1,18 +1,22 @@
 import { Container } from "@/components/layout/Container";
-import { Intro } from "@/components/landing/Intro";
-import { Edge } from "@/components/landing/Edge";
+import { Business } from "@/components/landing/Business";
+import { Close } from "@/components/landing/Close";
 import { Hero } from "@/components/landing/Hero";
-import { Payout } from "@/components/landing/Payout";
-import { Steps } from "@/components/landing/Steps";
-import { Straight } from "@/components/landing/Straight";
-import { ChainStrip } from "@/components/sections/ChainStrip";
+import { Intro } from "@/components/landing/Intro";
+import { Opportunity } from "@/components/landing/Opportunity";
+import { Thesis } from "@/components/landing/Thesis";
+import { TokenEngine } from "@/components/landing/TokenEngine";
+import { Vision } from "@/components/landing/Vision";
 import { SiteFooter } from "@/components/sections/SiteFooter";
 import { SiteHeader } from "@/components/sections/SiteHeader";
 
 /**
- * Five sections: what it does, how it works, what it does differently, how you
- * get paid, and the questions worth asking first. Everything longer lives at
- * /docs.
+ * Resident as a liquidity house: thesis, business, opportunity, token, vision,
+ * close. The headline carries the first screen on its own.
+ *
+ * The chain strip and the stat row that used to sit under the hero are gone.
+ * Both were competing with the headline for the first screen, and one of them
+ * was advertising reach the House does not yet have.
  */
 export default function Home() {
   return (
@@ -24,12 +28,13 @@ export default function Home() {
       <div id="main">
         <Container>
           <SiteHeader />
-          <ChainStrip />
           <Hero />
-          <Steps />
-          <Edge />
-          <Payout />
-          <Straight />
+          <Thesis />
+          <Business />
+          <Opportunity />
+          <TokenEngine />
+          <Vision />
+          <Close />
           <SiteFooter />
         </Container>
       </div>

@@ -86,7 +86,7 @@ export default function HoldersPage() {
         </div>
       </section>
 
-      <SectionRule />
+      <SectionRule inFlow />
 
       <section className="py-xxl">
         <Heading eyebrow="The cycle" title="From a trade to a payout" />
@@ -105,7 +105,7 @@ export default function HoldersPage() {
         </ol>
       </section>
 
-      <SectionRule delay={-2} />
+      <SectionRule inFlow delay={-2} />
 
       <section className="py-xxl">
         <div className="flex flex-col gap-10 md:flex-row md:gap-16">
@@ -135,7 +135,7 @@ export default function HoldersPage() {
         </div>
       </section>
 
-      <SectionRule delay={-4} />
+      <SectionRule inFlow delay={-4} />
 
       <section className="py-xxl">
         <Heading eyebrow="Verification" title={VERIFY_TITLE} />
@@ -159,7 +159,7 @@ export default function HoldersPage() {
         </p>
       </section>
 
-      <SectionRule delay={-6} />
+      <SectionRule inFlow delay={-6} />
 
       <section className="py-xxl">
         <div className="flex flex-col gap-10 md:flex-row md:gap-16">
@@ -176,7 +176,7 @@ export default function HoldersPage() {
         </div>
       </section>
 
-      <SectionRule delay={-8} />
+      <SectionRule inFlow delay={-8} />
 
       {/* Same visual weight as everything above it. A risk section set smaller
           than the upside is a risk section nobody reads. */}
@@ -192,7 +192,7 @@ export default function HoldersPage() {
         </div>
       </section>
 
-      <SectionRule delay={-10} />
+      <SectionRule inFlow delay={-10} />
 
       <section className="py-xxl">
         <Heading eyebrow="In one paragraph" title={CLOSING_TITLE} />

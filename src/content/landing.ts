@@ -1,132 +1,205 @@
 /**
- * Landing page copy. Four sections; the full method lives at /docs.
+ * Landing copy: Resident as a liquidity house.
  *
- * Register: short sentences, the number before the explanation. This is a page
- * someone reads standing up, deciding in thirty seconds whether to care — not a
- * paper they sit down with. An earlier draft ran 40-word single sentences and a
- * 102-word FAQ answer, which is how a method note reads, not a product.
+ * Seven sections, and the headline carries the first screen alone. The register
+ * is institutional rather than crypto-native — this reads as a financial
+ * operation describing its business, not a protocol describing its mechanism.
+ * The mechanism lives at /whitepaper and /docs.
  *
- * Plain does not mean loose. Every figure here is the one the code runs, and
- * the claims that usually travel with this register are the ones Resident
- * cannot make: not non-custodial, not audited, not governed, not deployed. None
- * of those words appear on the page. Being punchier must never become a way to
- * imply them. The FAQ is technical only; custody and deployment status are
- * stated at /docs, which every section links to.
+ * ONE RULE GOVERNS EVERY LINE HERE.
  *
- * On the 85/15 split: the 85% is protocol working capital, not a holder claim
- * held back. It is deployed, it absorbs losses, and the owner key can withdraw
- * it. Copy that lets a reader think of it as "their other 85%" would be false,
- * so the page says whose it is every time it names the number.
+ * Resident has not deployed. The vault has no address, no transaction has ever
+ * been sent, no capital is at work, and the Solana executor does not exist. So
+ * the page describes the business in the timeless present — which is honest
+ * about a design — and states its status explicitly rather than letting tense
+ * imply an operating history. `STATUS` is not a disclaimer bolted to the
+ * bottom; it sits in the hero, because a house that publishes where it actually
+ * is reads as more institutional than one that implies it is further along.
+ *
+ * The claims this page must never make, in any register: operating, deployed,
+ * audited, non-custodial, governed, or possessed of a track record. "The House
+ * is open" was in the brief for the closing section and is not here, because it
+ * is not.
+ *
+ * Numbers: 15% is the contract's HOLDER_BPS and is bound to it by
+ * test/whitepaper.test.mjs. No other figure on this page is invented — the
+ * ledger strip reports zero because zero is the number.
  */
 
 export const TOKEN = "$RES";
 
+// --- 1. hero ---------------------------------------------------------------
+
 export const HERO = {
-  headline: "$RES buys liquidity. The liquidity pays holders.",
-  sub: "Tokenized equity markets are thin. A five-figure order moves the price. Resident is the capital on the other side of that trade, on Robinhood Chain and Solana. Trading fees on $RES fund every position. 15% of realized profit goes to holders in USDG.",
-  cta: "Get $RES",
-  secondary: "Read the docs",
+  /** Carries the whole first screen. Set in display type, nothing beside it. */
+  headline: "Every market needs a house.",
+  eyebrow: "Capital at work. Markets in motion.",
+  /**
+   * The business in three sentences. Each describes how the House is built to
+   * work, which is true of it today; none claims it has done so yet.
+   */
+  sub: "Wall Street has its market makers. Onchain finance is getting its own. Trading fees on $RES become the House's capital, that capital is put to work as liquidity in tokenized markets, and 15% of realized profit is distributed to holders in USDG.",
+  cta: "Explore the House",
+  secondary: "Trade $RES",
 };
 
-export const HERO_STATS = [
-  { value: "15%", label: "of realized profit to holders" },
-  { value: "USDG", label: "paid in stablecoin" },
-  { value: "0", label: "claim transactions" },
-];
+/**
+ * Where the House actually is, in the hero rather than the small print.
+ *
+ * Every figure on this site is live or zero. Saying so is the whole of the
+ * institutional claim: the ambition is large and the position is small, and a
+ * reader who finds that out here will believe the rest of the page.
+ */
+export const STATUS = {
+  label: "Status",
+  body: "Pre-launch. The vault is not yet deployed, no capital is at work, and nothing has been audited. Every figure on this site is live or zero.",
+};
 
-export const STEPS_HEADING =
-  "$RES funds the positions. The positions pay $RES holders.";
+// --- 2. the thesis ---------------------------------------------------------
 
-export const STEPS = [
-  {
-    n: "01",
-    title: "Fees in",
-    body: "Trading fees on $RES go to the vault. That is the only capital the protocol ever deploys. No raise, no treasury, no investors. Capacity is set by the token's own turnover.",
-  },
-  {
-    n: "02",
-    title: "Capital out",
-    body: "It goes into concentrated positions in pools worth being in. Thin enough that five figures takes real share of the flow. Busy enough to pay continuously. Holding a range instead of falling through one.",
-  },
-  {
-    n: "03",
-    title: "Positions tended",
-    body: "A position earns only while price sits inside its range. Ranges are re-centered as markets move, and retired when a pool stops paying for itself. A position that moves against us gets re-centered, not dumped into thin liquidity.",
-  },
-];
-
-export const EDGE_HEADING = "Four things we do differently.";
-
-export const EDGE = [
-  {
-    label: "Net, not yield",
-    body: "Every liquidity dashboard publishes fee income. Fees are the flattering half. A position can collect handsomely while the price move underneath costs more than it brings in. We publish fees less what the move cost, over the same window. Including when that number is negative.",
-  },
-  {
-    label: "Capital follows the fees",
-    body: "A position can be healthy and still be in the wrong pool: nothing wrong with it, earning a fraction of what is available elsewhere. That never looks like a loss, so most desks leave it. We check every position against the board each interval. Capital moves when the gap clears three times the round trip.",
-  },
-  {
-    label: "Two chains, one ranking",
-    body: "A range on Robinhood Chain and a bin on Solana earn in completely different ways. Ranking them on headline yield compares two numbers that do not mean the same thing. Both get priced into one that does. Capital only crosses when the edge covers the trip.",
-  },
-  {
-    label: "Every threshold published",
-    body: "What a pool has to clear. How wide a position gets. When it is retired. Every number is in the docs, read from the code that runs. Change one and it shows as a change.",
-  },
-] as const;
-
-export const PAYOUT = {
-  headline: "Distributions",
-  body: "Realized profit splits at a fixed ratio the contract enforces. 15% to $RES holders, pro-rata in USDG. The other 85% stays as working capital: it funds new positions and absorbs losses. Holders have no claim on it.",
-  points: [
-    {
-      label: "Pro-rata",
-      body: "Distributed by balance across an eligibility-filtered holder snapshot.",
-    },
-    {
-      label: "No staking",
-      body: "Balances are read from the token. Nothing is deposited or locked.",
-    },
-    {
-      label: "Push-based",
-      body: "Distributions are sent to holders. There is no claim transaction.",
-    },
-    {
-      label: "Carries forward",
-      body: "Accrued profit persists in the ledger until it is paid. A distribution runs once every holder is owed at least $5, so nothing is spent sending amounts smaller than the cost of sending them.",
-    },
+export const THESIS = {
+  eyebrow: "The thesis",
+  headline: "A new financial system needs its own capital.",
+  body: [
+    "Stocks are moving onchain. So are funds, commodities, and entirely new classes of financial assets.",
+    "But listing an asset is only the beginning. Markets need liquidity. They need capital willing to take the other side of a trade. They need depth to support activity as participation grows.",
+    "That is the business Resident is entering. We intend to build one of the defining liquidity institutions of onchain finance — not by waiting for the market to mature, but by helping provide the capital it needs to get there.",
   ],
 };
 
-export const FAQ_HEADING = "FAQ";
+// --- 3. the business -------------------------------------------------------
+
+export const BUSINESS = {
+  eyebrow: "The business",
+  headline: "The House puts capital to work.",
+  standfirst:
+    "Resident is built as a liquidity business powered by $RES. The model connects token trading activity to capital deployment, and profitable liquidity operations to holder distributions.",
+  steps: [
+    {
+      n: "01",
+      title: "Capital formation",
+      body: "Trading fees generated by $RES finance the House's liquidity operations. There is no raise and no outside treasury: capacity is set by the token's own turnover.",
+    },
+    {
+      n: "02",
+      title: "Market participation",
+      body: "Capital is deployed into selected liquidity positions on Robinhood Chain. Solana is designed for and not yet built, so it is an intention rather than a venue.",
+    },
+    {
+      n: "03",
+      title: "Realized profits",
+      body: "Revenue comes from those positions, subject to trading performance, market conditions, and the risks that go with providing liquidity. Profit is booked only when it is realized.",
+    },
+    {
+      n: "04",
+      title: "Holder participation",
+      body: "15% of realized profits are distributed to $RES holders in USDG. The split is a constant in the contract, and the contract will not pay out more than it has earned.",
+    },
+  ],
+  close: "One token. One liquidity operation. A share in realized performance.",
+  /**
+   * The distinction that has to travel with the line above it, every time.
+   * A reader who takes "a share in realized performance" for equity has been
+   * misled by this page, however carefully the rest of it is worded.
+   */
+  note: "$RES is a token. Distributions are a token-based economic benefit — not equity, not ownership, and not a claim on Resident's assets or on the 85% retained as working capital.",
+};
+
+// --- 4. the opportunity ----------------------------------------------------
+
+export const OPPORTUNITY = {
+  eyebrow: "The opportunity",
+  headline: "The next Wall Street is being built onchain.",
+  standfirst: "And someone has to provide the liquidity.",
+  body: [
+    "Imagine a financial system where thousands of equities, ETFs, commodities and digital assets trade around the clock.",
+    "Every market represents a potential demand for capital. Every new trading venue expands the opportunity. Every increase in trading activity creates another reason for liquidity providers to exist.",
+    "Resident is positioning itself to serve that demand. The opportunity is not one market. It is the markets that come next.",
+  ],
+  close: "The opportunity is not one market. It is the markets that come next.",
+};
 
 /**
- * Technical questions only — how a position works, how pools are chosen, what
- * happens when price moves. Custody, audit status and deployment status are
- * deliberately not here; they live in the Custody section and the invariants
- * table at /docs, which this section links to.
+ * House Positions, shown as they are.
+ *
+ * The brief asked for the real markets with verified sizes rather than a wall
+ * of borrowed logos, which is the right instinct and currently resolves to an
+ * empty book. An empty book stated plainly is worth more here than a mock-up:
+ * it is the same page that will later carry real rows, and a reader can check
+ * it against the chain today.
  */
-export const FAQS = [
-  {
-    q: "What is a concentrated position?",
-    a: "Capital committed between two prices instead of spread across all of them. Inside that range, the position earns a share of every fee paid. Outside it, it holds inventory and earns nothing. Narrower takes more of the flow and spends more time out of range.",
+export const POSITIONS = {
+  eyebrow: "House positions",
+  headline: "No capital is at work yet.",
+  body: "When the House opens a position, it appears here with its market, its size, its range and what it has earned — net of what the price move cost, which is the half most liquidity dashboards leave out. Until then this table is empty, and empty is the honest number.",
+  link: { href: "/positions", label: "The live board the desk ranks" },
+};
+
+// --- 5. the token ----------------------------------------------------------
+
+export const TOKENS_SECTION = {
+  eyebrow: "The token",
+  headline: "The engine behind the House.",
+  body: [
+    "$RES powers Resident's capital formation. Trading activity generates fees that fund liquidity positions. Those positions are managed with the objective of generating realized profits.",
+    "A portion of those profits flows back to token holders, in USDG, with nothing to stake and nothing to claim.",
+  ],
+  /** The one verified figure on the page. Bound to HOLDER_BPS by a test. */
+  headline_stat: {
+    value: "15%",
+    label: "of realized profits",
+    note: "Distributed in USDG",
   },
-  {
-    q: "How are pools chosen?",
-    a: "Seven conditions, all of them. The pool prices in dollars. The fee it charges actually reaches the position, read live rather than assumed from its tier. $25,000 of volume in the last hour. No more than $400,000 of liquidity within 5% of price. Trading at 60% or more of its 24-hour high. At least 20 minutes old. And the providers already in it are net winners.",
-  },
-  {
-    q: "How wide is a position?",
-    a: "Not fixed. It comes from each pool's own measured volatility: 1.25 standard deviations over four hours, bounded at 1% and 60%. A volatile pool gets a wider range and a smaller share of flow. At that width a position is in range about 91% of the time. Buying the last few points of coverage costs about half the income.",
-  },
-  {
-    q: "Why not just open in the highest-fee pool?",
-    a: "Fee income is one side of the ledger. A pool paying 3% a day into a book that moves 20% a day loses money, and a ranking built on fees recommends it every time. We open only when expected fees beat the expected cost of the price moving. Measured at that pool's own volatility, not a house average.",
-  },
-];
+};
+
+/**
+ * The Ledger, in miniature.
+ *
+ * Four figures that will matter when the House is running, carried here at
+ * their true value so the page cannot start life lying. The brief's second
+ * statistic — "100% of Resident's ambition" — was a brand line wearing a
+ * number's clothes, and is deliberately not here.
+ */
+export const LEDGER = {
+  eyebrow: "The ledger",
+  headline: "Capital at work.",
+  note: "Live figures, published whether or not they flatter. Nothing has been deployed, so every figure below is zero.",
+  rows: [
+    { label: "Capital at work", value: "$0" },
+    { label: "Realized profits", value: "$0" },
+    { label: "Distributed to holders", value: "$0 USDG" },
+    { label: "House markets", value: "0" },
+  ],
+};
+
+// --- 6. the vision ---------------------------------------------------------
+
+export const VISION = {
+  eyebrow: "The vision",
+  headline: "A house built for a much bigger market.",
+  body: [
+    "Resident begins with tokenized equities and onchain liquidity. Our ambition extends to the financial markets that follow.",
+    "As more assets become available onchain, Resident aims to expand its capital operations into new markets, new trading pairs and new opportunities.",
+    "The House grows by putting capital to work.",
+  ],
+  close: "Resident intends to become a permanent participant in the onchain financial system. Not a passing trade. An institution.",
+};
+
+// --- 7. the close ----------------------------------------------------------
+
+/**
+ * The brief closed on "The House is open." It is not open, so the line does the
+ * next best thing and claims the one thing that is true early — that the books
+ * were published before the first dollar moved. That is a stronger opening
+ * position than a false present tense, and it is the only one available.
+ */
+export const CLOSE = {
+  eyebrow: "The House",
+  headline: "The House is not open yet. The books already are.",
+  body: "Every threshold the desk trades on, every refusal it prints, and every risk it cannot mitigate is published before a dollar moves. Read it first. Decide after.",
+  primary: { href: "/whitepaper", label: "Read the whitepaper" },
+  secondary: { href: "/docs", label: "The mechanism in plain words" },
+};
 
 export const FOOTER_NOTE =
-  "Tokenized equity markets are volatile and thinly traded. Holding $RES carries risk of loss, including total loss. Nothing on this page is financial advice.";
-
-export const TAGLINE = "The resident market maker for tokenized equities";
+  "Tokenized equity markets are volatile and thinly traded. $RES is a token: distributions are a token-based economic benefit, not equity or ownership, and holding it carries risk of loss, including total loss. Resident has not deployed and has not been audited. Nothing on this page is financial advice.";

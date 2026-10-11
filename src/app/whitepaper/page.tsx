@@ -193,7 +193,7 @@ export default function WhitepaperPage() {
         </Split>
       </section>
 
-      <SectionRule delay={-2} />
+      <SectionRule inFlow delay={-2} />
 
       <section id="cycle" className="py-xxl">
         <Heading eyebrow="The cycle" title={CYCLE_TITLE} />
@@ -205,7 +205,7 @@ export default function WhitepaperPage() {
         </p>
       </section>
 
-      <SectionRule delay={-4} />
+      <SectionRule inFlow delay={-4} />
 
       <section id="pricing" className="py-xxl">
         <Split eyebrow="Pricing a position" title={PRICING_TITLE}>
@@ -213,7 +213,7 @@ export default function WhitepaperPage() {
         </Split>
       </section>
 
-      <SectionRule delay={-6} />
+      <SectionRule inFlow delay={-6} />
 
       <section id="construction" className="py-xxl">
         <Split eyebrow="Building a position" title={CONSTRUCTION_TITLE}>
@@ -221,7 +221,7 @@ export default function WhitepaperPage() {
         </Split>
       </section>
 
-      <SectionRule delay={-8} />
+      <SectionRule inFlow delay={-8} />
 
       {/* The rules are numbered because the order is load-bearing: each one can
           claim a position so nothing below it acts on the same one. */}
@@ -253,7 +253,7 @@ export default function WhitepaperPage() {
         </p>
       </section>
 
-      <SectionRule delay={-10} />
+      <SectionRule inFlow delay={-10} />
 
       <section id="custody" className="py-xxl">
         <Split eyebrow="Custody" title={CUSTODY_TITLE}>
@@ -272,7 +272,7 @@ export default function WhitepaperPage() {
         </p>
       </section>
 
-      <SectionRule delay={-12} />
+      <SectionRule inFlow delay={-12} />
 
       <section id="distributions" className="py-xxl">
         <Split eyebrow="Distributions" title={DISTRIBUTION_TITLE}>
@@ -290,7 +290,7 @@ export default function WhitepaperPage() {
         </div>
       </section>
 
-      <SectionRule delay={-14} />
+      <SectionRule inFlow delay={-14} />
 
       <section id="parameters" className="py-xxl">
         <Heading eyebrow="Parameters" title={PARAMETERS_TITLE} />
@@ -327,7 +327,7 @@ export default function WhitepaperPage() {
         </p>
       </section>
 
-      <SectionRule delay={-16} />
+      <SectionRule inFlow delay={-16} />
 
       {/* Same visual weight as everything above it. A risk section set smaller
           than the mechanism is a risk section nobody reads. */}
@@ -356,7 +356,7 @@ export default function WhitepaperPage() {
         </div>
       </section>
 
-      <SectionRule delay={-18} />
+      <SectionRule inFlow delay={-18} />
 
       <section id="status" className="py-xxl">
         <Heading eyebrow="Status" title={STATUS_TITLE} />
