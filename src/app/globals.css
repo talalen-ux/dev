@@ -70,24 +70,6 @@ body {
     text-transform: uppercase;
   }
 
-  /*
-     Display — above the Figma ramp, for the one line that carries a screen.
-
-     The ramp stops at 48px because nothing in the original design needed more.
-     The landing headline is the whole first screen, so it gets a size that
-     scales with the viewport rather than a breakpoint ladder: 11vw keeps the
-     three words on two lines from a phone to a wide desktop, and the clamp
-     stops it collapsing on one and running off the other.
-  */
-  .type-display {
-    font-size: clamp(40px, 10.5vw, 136px);
-    font-weight: 500;
-    line-height: 0.92;
-    letter-spacing: -0.03em;
-    text-transform: uppercase;
-    text-wrap: balance;
-  }
-
   /* H1 (hero): Chivo Medium 48 / 51px / -2% */
   .type-h1 {
     font-size: 48px;
@@ -578,35 +560,4 @@ html:has(#intro):not(:has(#main:target)) {
   .hover-lime-item {
     transition: none;
   }
-}
-
-/* ---------------------------------------------------------------------------
-   The House grid.
-
-   "A barely visible architectural grid suggesting a trading floor." Two
-   gradients rather than an SVG, so it costs no request and no DOM, and a mask
-   fades it out downward so the headline sits on clean white where the type is
-   heaviest. The line colour is far lighter than --color-rule: at the rule's own
-   0.15 alpha a full-bleed grid competes with the type instead of sitting under
-   it.
-
-   Decorative only, so it is painted on a pseudo-element and never announced.
-   --------------------------------------------------------------------------- */
-.house-grid {
-  position: relative;
-  isolation: isolate;
-}
-
-.house-grid::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background-image:
-    linear-gradient(to right, rgba(26, 28, 23, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(26, 28, 23, 0.05) 1px, transparent 1px);
-  background-size: 88px 88px;
-  background-position: center top;
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 85%);
-  mask-image: linear-gradient(to bottom, #000 0%, transparent 85%);
 }

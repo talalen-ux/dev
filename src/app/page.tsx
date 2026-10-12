@@ -7,6 +7,7 @@ import { Opportunity } from "@/components/landing/Opportunity";
 import { Thesis } from "@/components/landing/Thesis";
 import { TokenEngine } from "@/components/landing/TokenEngine";
 import { Vision } from "@/components/landing/Vision";
+import { ChainStrip } from "@/components/sections/ChainStrip";
 import { SiteFooter } from "@/components/sections/SiteFooter";
 import { SiteHeader } from "@/components/sections/SiteHeader";
 
@@ -28,6 +29,7 @@ export default function Home() {
       <div id="main">
         <Container>
           <SiteHeader />
+          <ChainStrip />
           <Hero />
           <Thesis />
           <Business />

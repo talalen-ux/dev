@@ -4,28 +4,21 @@ import { VISION } from "@/content/landing";
 /** Where the House intends to go, stated as intention rather than roadmap. */
 export function Vision() {
   return (
-    <>
-      <SectionRule inFlow delay={-10} />
-      <section id="vision" className="py-xxl">
-        <div className="flex flex-col gap-10 md:flex-row md:gap-16">
-          <div className="md:w-[320px] md:shrink-0">
-            <p className="type-eyebrow text-text-secondary">{VISION.eyebrow}</p>
-            <h2 className="type-h2 mt-4 max-w-[16ch] text-balance">
-              {VISION.headline}
-            </h2>
-          </div>
-          <div className="flex flex-col gap-6">
-            {VISION.body.map((paragraph) => (
-              <p key={paragraph} className="type-body-lg max-w-[58ch] text-text-secondary">
-                {paragraph}
-              </p>
-            ))}
-            <p className="type-h3 mt-6 max-w-[30ch] text-balance text-text-primary">
-              {VISION.close}
+    <section id="vision" className="relative py-xxl">
+      <SectionRule delay={-7.4} />
+      <div className="flex flex-col gap-12 lg:flex-row lg:gap-24">
+        <h2 className="type-h2 shrink-0 text-[28px] text-balance text-text-primary sm:text-[36px] lg:w-[400px]">
+          {VISION.headline}
+        </h2>
+        <div className="flex flex-1 flex-col gap-6">
+          {VISION.body.map((paragraph) => (
+            <p key={paragraph} className="type-body-lg max-w-[620px] text-text-secondary">
+              {paragraph}
             </p>
-          </div>
+          ))}
+          <p className="type-h3 mt-4 max-w-[480px] text-text-primary">{VISION.close}</p>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }

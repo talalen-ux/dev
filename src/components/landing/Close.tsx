@@ -1,33 +1,34 @@
 import Link from "next/link";
 
+import { SectionRule } from "@/components/ui/SectionRule";
 import { CLOSE } from "@/content/landing";
 
 /**
- * The closing claim.
+ * The closing claim, on the page's own ground rather than a second lime band.
  *
- * The brief's line was "The House is open." It is not, so this says what is
- * true and is the stronger position anyway: the books were published before the
- * first dollar moved, and a reader can check them right now. Both calls to
- * action lead to documents rather than to a buy button, which is the point.
+ * The hero already spends the lime. Bracketing the page with it would make the
+ * two ends compete, which is the thing the old design is careful not to do —
+ * one accent, used once.
  */
 export function Close() {
   return (
-    <section className="-mx-6 bg-brand-fill px-6 py-xxl text-on-brand md:-mx-12 md:px-12 min-[1440px]:-mx-24 min-[1440px]:px-24">
-      <p className="type-eyebrow text-on-brand/70">{CLOSE.eyebrow}</p>
-      <h2 className="type-h1 mt-6 max-w-[20ch] text-balance text-[32px] leading-[36px] sm:text-[40px] sm:leading-[43px] lg:text-[48px] lg:leading-[51px]">
+    <section id="close" className="relative py-xxl">
+      <SectionRule delay={-4.3} />
+      <h2 className="type-h2 max-w-[640px] text-[28px] text-balance text-text-primary sm:text-[36px]">
         {CLOSE.headline}
       </h2>
-      <p className="type-body-lg mt-8 max-w-[54ch]">{CLOSE.body}</p>
-      <div className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-4">
+      <p className="type-body-lg mt-8 max-w-[620px] text-text-secondary">{CLOSE.body}</p>
+
+      <div className="mt-12 flex flex-wrap items-center gap-6">
         <Link
           href={CLOSE.primary.href}
-          className="type-eyebrow inline-flex min-h-11 items-center bg-on-brand px-6 text-brand-fill"
+          className="type-eyebrow bg-brand-fill px-6 py-4 text-on-brand transition-opacity hover:opacity-85"
         >
           {CLOSE.primary.label} →
         </Link>
         <Link
           href={CLOSE.secondary.href}
-          className="type-eyebrow inline-flex min-h-11 items-center text-on-brand underline underline-offset-4"
+          className="type-eyebrow inline-flex min-h-11 items-center text-text-secondary underline underline-offset-4 hover:text-text-primary"
         >
           {CLOSE.secondary.label}
         </Link>
